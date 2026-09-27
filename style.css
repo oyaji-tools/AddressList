@@ -1,0 +1,153 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@600;800&display=swap');
+
+body {
+    font-family: 'Noto Sans JP', sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.font-vertical {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    font-family: 'Shippori Mincho', 'Noto Serif JP', serif;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: rgba(75, 85, 99, 0.5);
+}
+
+/* ドラッグ中のスタイル */
+.dragging {
+    opacity: 0.4;
+    transform: scale(0.98);
+    border: 2px dashed #3b82f6 !important;
+}
+
+.drag-over {
+    border: 2px solid #60a5fa !important;
+    background-color: rgba(30, 58, 138, 0.3) !important;
+}
+
+/* ライトモード用包括的スタイルオーバーライド */
+html.theme-light body {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+}
+
+html.theme-light header,
+html.theme-light nav {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    border-color: #e2e8f0 !important;
+}
+
+html.theme-light header h1,
+html.theme-light header p,
+html.theme-light .text-white,
+html.theme-light .text-slate-100,
+html.theme-light .text-slate-200,
+html.theme-light .text-slate-300 {
+    color: #0f172a !important;
+}
+
+html.theme-light .text-slate-400 {
+    color: #64748b !important;
+}
+
+html.theme-light .bg-slate-900,
+html.theme-light .bg-slate-800,
+html.theme-light .bg-slate-950 {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+html.theme-light input,
+html.theme-light textarea,
+html.theme-light select {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+html.theme-light input::placeholder,
+html.theme-light textarea::placeholder {
+    color: #94a3b8 !important;
+}
+
+html.theme-light .bg-slate-700 {
+    background-color: #f1f5f9 !important;
+    color: #1e293b !important;
+    border-color: #cbd5e1 !important;
+}
+
+html.theme-light .bg-blue-950\/60,
+html.theme-light .bg-blue-950\/80,
+html.theme-light .bg-blue-900\/50 {
+    background-color: #eff6ff !important;
+    border-color: #bfdbfe !important;
+}
+
+html.theme-light .bg-blue-950\/60 .text-blue-300 {
+    color: #1d4ed8 !important;
+}
+
+html.theme-light .bg-amber-950\/80,
+html.theme-light .bg-amber-950 {
+    background-color: #fefce8 !important;
+    border-color: #fef08a !important;
+}
+
+html.theme-light table thead {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+}
+
+html.theme-light table tbody tr:hover {
+    background-color: #f1f5f9 !important;
+}
+
+html.theme-light .sticky-header-bg {
+    background-color: rgba(248, 250, 252, 0.95) !important;
+    border-color: #e2e8f0 !important;
+}
+
+html.dark .sticky-header-bg {
+    background-color: rgba(15, 23, 42, 0.9) !important;
+    border-color: #334155 !important;
+}
+
+/* 印刷スタイル定義 */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #printTargetArea, #printTargetArea * {
+        visibility: visible;
+    }
+    #printTargetArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: white !important;
+        color: black !important;
+    }
+}

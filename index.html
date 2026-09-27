@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ja" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スマート住所録</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 外部CSSファイル読み込み -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-24 md:pb-10 selection:bg-blue-500 selection:text-white">
+
+    <!-- ヘッダー -->
+    <header class="bg-slate-800/90 backdrop-blur-md border-b border-slate-700/80 sticky top-0 z-30 px-4 py-3 shadow-md">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/30">
+                    <i class="fa-solid fa-address-book"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold text-slate-100 leading-tight">スマート住所録</h1>
+                    <p class="text-[10px] text-slate-400">手書き参照・拡大・印刷対応</p>
+                </div>
+            </div>
+
+            <!-- ヘッダーアクション (PC・タブレット表示、スマホ時は下部ナビに統合) -->
+            <div class="hidden sm:flex items-center space-x-2">
+                <!-- テーマ迅速切り替えボタン -->
+                <button onclick="toggleThemeQuick()" title="テーマ切替" class="px-2.5 py-1.5 bg-slate-700/80 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-medium transition cursor-pointer border border-slate-600 flex items-center space-x-1">
+                    <i id="themeToggleIcon" class="fa-solid fa-sun text-amber-400"></i>
+                    <span id="themeToggleText">ライト</span>
+                </button>
+
+                <!-- 表示設定 -->
+                <button onclick="openSettingsModal()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-medium transition cursor-pointer border border-slate-600 flex items-center space-x-1.5 shadow-sm">
+                    <i class="fa-solid fa-gear text-amber-400"></i>
+                    <span>表示設定</span>
+                </button>
+
+                <!-- データ管理/バックアップ -->
+                <button onclick="openDataModal()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-medium transition cursor-pointer border border-slate-600 flex items-center space-x-1.5 shadow-sm">
+                    <i class="fa-solid fa-database text-cyan-400"></i>
+                    <span>保存・復元</span>
+                </button>
+
+                <!-- アプリ追加 (PWA) -->
+                <button onclick="openPwaModal()" class="px-3 py-1.5 bg-purple-950/80 hover:bg-purple-900 border border-purple-700/60 text-purple-200 rounded-lg text-xs font-medium transition cursor-pointer flex items-center space-x-1.5 shadow-sm">
+                    <i class="fa-solid fa-mobile-screen-button text-purple-400"></i>
+                    <span>アプリ化</span>
+                </button>
+
+                <!-- 新規登録 -->
+                <button onclick="openModal()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs transition cursor-pointer shadow-lg shadow-blue-600/30 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>新規登録</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 検索・フィルター・コントロールエリア (Sticky) -->
+    <section class="sticky top-[57px] z-20 sticky-header-bg border-b border-slate-800 shadow-lg backdrop-blur-md px-4 py-3">
+        <div class="max-w-6xl mx-auto space-y-2.5">
+            <div class="flex flex-col sm:flex-row gap-2">
+                <!-- 検索窓 -->
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="searchInput" oninput="applyFilters()" placeholder="名前・フリガナ・住所・会社・メモで検索..."
+                           class="w-full pl-9 pr-8 py-2 bg-slate-800/90 border border-slate-700/80 rounded-xl text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    <button onclick="clearSearch()" id="clearSearchBtn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <!-- 並び替え -->
+                    <select id="sortSelect" onchange="applyFilters()" class="bg-slate-800/90 border border-slate-700/80 text-xs text-slate-200 rounded-xl px-2.5 py-2 focus:outline-none focus:border-blue-500 cursor-pointer">
+                        <option value="custom">任意パターン順（登録順）</option>
+                        <option value="kanaAsc">五十音順 (ア→ン)</option>
+                        <option value="kanaDesc">五十音順 (ン→ア)</option>
+                    </select>
+
+                    <!-- 表示モード切替（カード / 一覧） -->
+                    <div class="flex bg-slate-800 p-1 rounded-xl border border-slate-700/80">
+                        <button id="viewCardBtn" onclick="switchViewMode('card')" class="px-2.5 py-1 text-xs rounded-lg transition font-medium cursor-pointer flex items-center space-x-1 bg-blue-600 text-white">
+                            <i class="fa-solid fa-address-card"></i>
+                            <span class="hidden md:inline">カード</span>
+                        </button>
+                        <button id="viewTableBtn" onclick="switchViewMode('table')" class="px-2.5 py-1 text-xs rounded-lg transition font-medium cursor-pointer flex items-center space-x-1 text-slate-400 hover:text-slate-200">
+                            <i class="fa-solid fa-list"></i>
+                            <span class="hidden md:inline">一覧</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 50音クイックインデックスバー -->
+            <div id="kanaIndexContainer" class="flex items-center space-x-1 overflow-x-auto pb-1 text-[11px] no-scrollbar border-t border-b border-slate-700/50 py-1.5">
+                <!-- JSで動的生成 -->
+            </div>
+
+            <!-- タグフィルター (横スクロール) -->
+            <div id="tagFilterContainer" class="flex items-center space-x-1.5 overflow-x-auto pb-0.5 pt-0.5 text-xs no-scrollbar">
+                <!-- JSで動的生成 -->
+            </div>
+        </div>
+    </section>
+
+    <!-- メインコンテンツ -->
+    <main class="max-w-6xl mx-auto px-4 pt-4">
+        <!-- ダブルクリック動作ガイド & 件数表示 -->
+        <div class="flex items-center justify-between mb-3 text-xs text-slate-400 px-1">
+            <span id="dblClickGuideText" class="flex items-center">
+                <i class="fa-solid fa-hand-pointer mr-1.5 text-blue-400"></i>
+                カード・行をダブルクリックで特大表示
+            </span>
+            <span id="contactCount" class="font-medium text-slate-300">0 件</span>
+        </div>
+
+        <!-- 連絡先リスト（カード表示ビュー） -->
+        <div id="cardViewContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+            <!-- JSで動的生成 -->
+        </div>
+
+        <!-- 連絡先リスト（テーブル一覧表示ビュー） -->
+        <div id="tableViewContainer" class="hidden overflow-x-auto bg-slate-800 rounded-2xl border border-slate-700/80 shadow-xl">
+            <table class="w-full text-left text-xs text-slate-300">
+                <thead class="bg-slate-900/90 text-slate-400 uppercase font-bold border-b border-slate-700">
+                    <tr>
+                        <th scope="col" class="py-3 px-3 w-20 text-center">操作</th>
+                        <th scope="col" class="py-3 px-2 w-14 text-center">順序</th>
+                        <th scope="col" class="py-3 px-4">お名前 / 住所 / 主要連絡先</th>
+                    </tr>
+                </thead>
+                <tbody id="tableTbody" class="divide-y divide-slate-700/50">
+                    <!-- JSで動的生成 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 空の状態メッセージ -->
+        <div id="emptyState" class="hidden text-center py-16 px-4">
+            <div class="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-700 text-slate-500">
+                <i class="fa-solid fa-address-book text-2xl"></i>
+            </div>
+            <h3 class="text-sm font-bold text-slate-300 mb-1">連絡先が見つかりません</h3>
+            <p class="text-xs text-slate-400 mb-4">新規登録するか、検索条件・タグ指定・50音フィルターを解除してください。</p>
+            <button onclick="openModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition">
+                <i class="fa-solid fa-plus mr-1"></i>新規登録する
+            </button>
+        </div>
+    </main>
+
+    <!-- モーダル: 登録・編集 -->
+    <div id="contactModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3 sm:p-4">
+        <div class="bg-slate-800 rounded-2xl max-w-lg w-full p-5 shadow-2xl border border-slate-700 max-h-[92vh] flex flex-col">
+            <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-700 shrink-0">
+                <h3 id="modalTitle" class="text-base font-bold text-slate-100 flex items-center">
+                    <i class="fa-solid fa-user-pen mr-2 text-blue-400"></i>連絡先の登録
+                </h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-200 cursor-pointer p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="contactForm" onsubmit="saveContact(event)" class="flex flex-col flex-1 overflow-hidden">
+                <input type="hidden" id="contactId">
+
+                <!-- 1. 固定表示エリア (常にフォーム最上部に固定) -->
+                <div id="fixedZoneContainer" class="space-y-3 bg-blue-950/40 p-3 rounded-xl border border-blue-900/60 shrink-0 mb-3">
+                    <div class="text-[10px] font-bold text-blue-400 flex items-center mb-1">
+                        <i class="fa-solid fa-thumbtack mr-1"></i>固定表示エリア（必須項目）
+                    </div>
+                    <!-- JSで設定順に従ってフィールドを動的挿入 -->
+                </div>
+
+                <!-- 2. スクロール表示エリア (中身のみスクロール可能) -->
+                <div class="overflow-y-auto pr-1 space-y-3 flex-1">
+                    <div id="scrollZoneContainer" class="space-y-3">
+                        <!-- JSで設定順に従ってフィールドを動的挿入 -->
+                    </div>
+
+                    <!-- 3. 詳細表示エリア (アコーディオンボタン) -->
+                    <div id="foldZoneWrapper" class="pt-2 border-t border-slate-700/60">
+                        <button type="button" onclick="toggleAccordion()" class="w-full py-2 px-3 bg-slate-900/80 hover:bg-slate-900 text-slate-300 rounded-xl border border-slate-700 flex justify-between items-center transition font-medium text-xs">
+                            <span class="flex items-center">
+                                <i class="fa-solid fa-sliders text-indigo-400 mr-2"></i>詳細項目を入力 (折りたたみ)
+                            </span>
+                            <i id="accordionIcon" class="fa-solid fa-chevron-down transition-transform duration-200 text-xs text-slate-400"></i>
+                        </button>
+
+                        <div id="foldZoneContainer" class="hidden space-y-3 pt-3 pl-1 text-xs">
+                            <!-- JSで設定順に従ってフィールドを動的挿入 -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-end space-x-2 border-t border-slate-700/80 shrink-0 mt-2 text-xs">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl font-bold cursor-pointer">
+                        キャンセル
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold cursor-pointer shadow-lg shadow-blue-600/30">
+                        保存する
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- DOMフィールド要素用の非表示バッファープール -->
+    <div id="fieldsPool" class="hidden">
+        <!-- お名前（姓・名） -->
+        <div id="fieldName" class="grid grid-cols-2 gap-2 text-xs">
+            <div>
+                <label class="block font-bold text-slate-300 mb-1" id="lblLastName">姓 <span class="text-rose-400">*</span></label>
+                <input type="text" id="inputLastName" placeholder="山田" class="w-full p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-300 mb-1" id="lblFirstName">名 <span class="text-rose-400">*</span></label>
+                <input type="text" id="inputFirstName" placeholder="太郎" class="w-full p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500">
+            </div>
+        </div>
+
+        <!-- フリガナ（セイ・メイ） -->
+        <div id="fieldFurigana" class="grid grid-cols-2 gap-2 text-xs">
+            <div>
+                <label class="block font-bold text-slate-300 mb-1" id="lblLastFurigana">セイ</label>
+                <input type="text" id="inputLastFurigana" placeholder="ヤマダ" class="w-full p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-300 mb-1" id="lblFirstFurigana">メイ</label>
+                <input type="text" id="inputFirstFurigana" placeholder="タロウ" class="w-full p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500">
+            </div>
+        </div>
+
+        <!-- 郵便番号・住所 -->
+        <div id="fieldAddress" class="space-y-2 text-xs">
+            <div>
+                <label class="block font-bold text-slate-300 mb-1" id="lblPostal">郵便番号 <span class="text-rose-400">*</span></label>
+                <div class="flex space-x-2">
+                    <input type="text" id="inputPostal" placeholder="100-0001 (皇居の例)" class="flex-1 p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500">
+                    <button type="button" onclick="searchAddress()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl whitespace-nowrap cursor-pointer">
+                        <i class="fa-solid fa-magnifying-glass mr-1"></i>住所検索
+                    </button>
+                </div>
+                <span id="zipStatus" class="text-[10px] text-slate-400 mt-1 block"></span>
+            </div>
+            <div>
+                <label class="block font-bold text-slate-300 mb-1" id="lblAddress">住所 <span class="text-rose-400">*</span></label>
+                <textarea id="inputAddress" rows="2" placeholder="東京都千代田区千代田1-1" class="w-full p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 resize-none"></textarea>
+            </div>
+        </div>
+
+        <!-- 連名 -->
+        <div id="fieldJointName" class="text-xs">
+            <label class="block font-bold text-slate-300 mb-1" id="lblJointName">連名（ご家族など）</label>
+            <input type="text" id="inputJointName" placeholder="花子（妻）, 翔太（長男）" class="w-full p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500">
+        </div>
+
+        <!-- グループタグ (バッジ入力) -->
+        <div id="fieldTags" class="text-xs">
+            <label class="block font-bold text-slate-300 mb-1" id="lblTags">グループタグ</label>
+            <div class="space-y-1.5">
+                <div id="modalTagsBadgeList" class="flex flex-wrap gap-1 mb-1 min-h-[26px] p-1 bg-slate-900/60 rounded-lg border border-slate-700/50">
+                    <!-- JSで動的追加 -->
+                </div>
+                <div class="flex space-x-2">
+                    <input type="text" id="inputTags" list="tagCandidateList" placeholder="例: 親戚, 年賀状" class="flex-1 p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500">
+                    <button type="button" onclick="addTagFromInput()" class="px-3 py-2 bg-pink-600 hover:bg-pink-500 text-white font-bold rounded-xl whitespace-nowrap cursor-pointer">
+                        追加
+                    </button>
+                </div>
+                <datalist id="tagCandidateList"></datalist>
+                <div id="suggestedGroupTags" class="flex flex-wrap gap-1 pt-1 text-[10px]">
+                    <!-- 過去のグループタグ候補 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- やり取り記録タグ (バッジ入力) -->
+        <div id="fieldGiftNotes" class="text-xs">
+            <label class="block font-bold text-slate-300 mb-1" id="lblGiftNotes">やり取り記録タグ</label>
+            <div class="space-y-1.5">
+                <div id="modalGiftNotesBadgeList" class="flex flex-wrap gap-1 mb-1 min-h-[26px] p-1 bg-slate-900/60 rounded-lg border border-slate-700/50">
+                    <!-- JSで動的追加 -->
+                </div>
+                <div class="flex space-x-2">
+                    <input type="text" id="inputGiftNotes" list="giftCandidateList" placeholder="例: 2026年賀状送付済, お中元受領" class="flex-1 p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500">
+                    <button type="button" onclick="addGiftNoteFromInput()" class="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl whitespace-nowrap cursor-pointer">
+                        追加
+                    </button>
+                </div>
+                <datalist id="giftCandidateList"></datalist>
+                <div id="suggestedGiftNotes" class="flex flex-wrap gap-1 pt-1 text-[10px]">
+                    <!-- 過去のやり取り記録候補 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 電話番号 -->
+        <div id="fieldPhone" class="text-xs">
+            <label class="block font-bold text-slate-300 mb-1" id="lblPhone">電話番号</label>
+            <input type="tel" id="inputPhone" placeholder="090-1234-5678" class="w-full p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500">
+        </div>
+
+        <!-- 会社名/所属 -->
+        <div id="fieldCompany" class="text-xs">
+            <label class="block font-bold text-slate-300 mb-1" id="lblCompany">会社名 / 所属</label>
+            <input type="text" id="inputCompany" placeholder="株式会社〇〇 営業部" class="w-full p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500">
+        </div>
+
+        <!-- 自由メモ -->
+        <div id="fieldNotes" class="text-xs">
+            <label class="block font-bold text-slate-300 mb-1" id="lblNotes">自由メモ</label>
+            <textarea id="inputNotes" rows="2" placeholder="自由メモ・注意事項など" class="w-full p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 resize-none"></textarea>
+        </div>
+    </div>
+
+    <!-- 特大表示モーダル (高齢者向け拡大参照モード) -->
+    <div id="zoomModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-3 sm:p-6 overflow-y-auto">
+        <div class="bg-slate-900 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border-2 border-amber-500/60 my-auto text-slate-100 relative">
+            <div class="flex justify-between items-start mb-4 pb-3 border-b border-slate-800">
+                <div>
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 mb-1">
+                        <i class="fa-solid fa-glasses mr-1"></i>手書き参照用 特大表示
+                    </span>
+                    <h3 class="text-xl font-bold text-white">拡大参照画面</h3>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <!-- 倍率選択コントロール -->
+                    <div class="flex bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs">
+                        <button onclick="setZoomScale(1)" id="zoomScale100" class="px-2 py-1 rounded-lg transition font-bold bg-amber-500 text-slate-950">100%</button>
+                        <button onclick="setZoomScale(1.25)" id="zoomScale125" class="px-2 py-1 rounded-lg transition font-bold text-slate-300 hover:text-white">125%</button>
+                        <button onclick="setZoomScale(1.5)" id="zoomScale150" class="px-2 py-1 rounded-lg transition font-bold text-slate-300 hover:text-white">150%</button>
+                        <button onclick="setZoomScale(1.8)" id="zoomScale180" class="px-2 py-1 rounded-lg transition font-bold text-slate-300 hover:text-white">180%</button>
+                    </div>
+                    <button onclick="closeZoomModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
+                        <i class="fa-solid fa-xmark text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- スケール可変コンテナ -->
+            <div id="zoomScaleContainer" class="transition-transform duration-200 origin-top-left space-y-6">
+                <!-- 氏名・連名エリア -->
+                <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800">
+                    <div id="zoomFurigana" class="text-amber-400/90 text-sm sm:text-base font-bold tracking-widest mb-1">ヤマダ タロウ</div>
+                    <div class="flex items-baseline space-x-3">
+                        <div id="zoomName" class="text-3xl sm:text-4xl font-black text-white tracking-wider">山田 太郎</div>
+                        <span class="text-xl font-bold text-slate-400">様</span>
+                    </div>
+                    <div id="zoomJointName" class="text-lg sm:text-xl font-bold text-cyan-300 mt-2 hidden">
+                        <i class="fa-solid fa-users mr-1.5 text-xs"></i>連名: <span id="zoomJointNameText"></span>
+                    </div>
+                </div>
+
+                <!-- 郵便番号・住所エリア -->
+                <div class="bg-amber-950/40 p-5 rounded-2xl border-2 border-amber-500/50 space-y-3">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div class="text-amber-400 font-bold text-xs uppercase tracking-wider flex items-center">
+                            <i class="fa-solid fa-location-dot mr-1.5"></i>郵便番号・住所
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button id="zoomCopyBtn" onclick="copyAddressFromZoom()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl transition cursor-pointer shadow-md flex items-center">
+                                <i class="fa-solid fa-copy mr-1"></i>住所コピー
+                            </button>
+                            <button id="zoomShareBtn" onclick="shareContactTextFromZoom()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl transition cursor-pointer shadow-md flex items-center">
+                                <i class="fa-solid fa-share-nodes mr-1"></i>一括コピー
+                            </button>
+                        </div>
+                    </div>
+                    <div id="zoomPostal" class="text-xl sm:text-2xl font-mono font-bold text-amber-200">〒 100-0001</div>
+                    <div id="zoomAddress" class="text-2xl sm:text-3xl font-black text-white leading-relaxed tracking-wide border-t border-amber-500/30 pt-3">
+                        東京都千代田区千代田1-1
+                    </div>
+                </div>
+
+                <!-- その他詳細情報 -->
+                <div id="zoomDetails" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div id="zoomPhoneBox" class="bg-slate-950 p-3 rounded-xl border border-slate-800 hidden">
+                        <span class="text-slate-400 font-bold block mb-0.5">電話番号</span>
+                        <span id="zoomPhone" class="text-base font-bold text-emerald-400"></span>
+                    </div>
+                    <div id="zoomCompanyBox" class="bg-slate-950 p-3 rounded-xl border border-slate-800 hidden">
+                        <span class="text-slate-400 font-bold block mb-0.5">会社名 / 所属</span>
+                        <span id="zoomCompany" class="text-sm font-bold text-purple-300"></span>
+                    </div>
+                </div>
+
+                <div id="zoomNotesBox" class="bg-slate-950 p-3 rounded-xl border border-slate-800 hidden text-xs">
+                    <span class="text-slate-400 font-bold block mb-0.5">メモ</span>
+                    <p id="zoomNotes" class="text-slate-200 whitespace-pre-wrap leading-relaxed"></p>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-800 flex justify-between items-center">
+                <button id="zoomPrintBtn" onclick="openPrintModalFromZoom()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl cursor-pointer transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-print"></i>
+                    <span>ハガキ宛名印刷</span>
+                </button>
+                <button onclick="closeZoomModal()" class="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm rounded-xl cursor-pointer transition border border-slate-700">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ハガキ宛名印刷プレビューモーダル -->
+    <div id="printModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-3 sm:p-6 overflow-y-auto">
+        <div class="bg-slate-900 rounded-3xl max-w-lg w-full p-5 shadow-2xl border border-slate-700 text-slate-100 my-auto">
+            <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
+                <h3 class="text-base font-bold text-slate-100 flex items-center">
+                    <i class="fa-solid fa-print text-emerald-400 mr-2"></i>ハガキ宛名 印刷プレビュー
+                </h3>
+                <button onclick="closePrintModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-400 mb-3">ハガキサイズでの宛名印刷用プレビューです。「印刷を実行」ボタンを押すとプリンター出力・PDF保存が可能です。</p>
+
+            <!-- 縦書きハガキプレビュー領域 (印刷時に抽出されるエリア) -->
+            <div id="printTargetArea" class="w-[240px] h-[360px] mx-auto bg-white text-black p-4 rounded-xl shadow-xl border border-slate-300 relative overflow-hidden flex flex-col justify-between">
+                <!-- 郵便番号欄 (右上) -->
+                <div class="flex justify-end space-x-1 font-mono font-bold text-red-600 text-sm tracking-wider pt-1 pr-1">
+                    <span id="printPostalCode">100-0001</span>
+                </div>
+
+                <div class="flex justify-between items-start h-[260px] px-2 pt-2">
+                    <!-- 受取人 氏名 (中央・巨大縦書き) -->
+                    <div class="font-vertical text-2xl font-bold tracking-widest my-auto text-black pl-4">
+                        <span id="printName">山田 太郎</span>
+                        <span class="text-lg font-normal ml-1">様</span>
+                    </div>
+
+                    <!-- 住所 (右側・縦書き) -->
+                    <div class="font-vertical text-xs font-semibold leading-relaxed text-slate-800 pr-1 max-h-[220px]">
+                        <span id="printAddress">東京都千代田区千代田１－１</span>
+                    </div>
+                </div>
+
+                <div class="text-[9px] text-slate-400 text-center border-t border-slate-200 pt-1">
+                    スマート住所録 宛名プレビュー
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end space-x-2 text-xs">
+                <button onclick="closePrintModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl font-bold cursor-pointer">
+                    閉じる
+                </button>
+                <button onclick="window.print()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg cursor-pointer flex items-center space-x-1.5">
+                    <i class="fa-solid fa-print"></i>
+                    <span>印刷を実行 (またはPDF保存)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 表示設定モーダル -->
+    <div id="settingsModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
+        <div class="bg-slate-800 rounded-2xl max-w-lg w-full p-5 shadow-2xl border border-slate-700 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-700">
+                <h3 class="text-base font-bold text-slate-100 flex items-center">
+                    <i class="fa-solid fa-gear mr-2 text-amber-400"></i>表示位置・順序・動作設定
+                </h3>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-200 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- カラーテーマ切り替え設定 -->
+            <div class="mb-4 p-3 bg-slate-900/80 rounded-xl border border-slate-700">
+                <label class="block text-xs font-bold text-slate-200 mb-2">
+                    <i class="fa-solid fa-palette text-purple-400 mr-1.5"></i>カラーテーマ設定
+                </label>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <label class="flex items-center space-x-2 bg-slate-800 p-2 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-700">
+                        <input type="radio" name="themeRadio" value="dark" onchange="setAppTheme('dark')" id="themeDarkRadio" class="accent-purple-500">
+                        <span class="text-slate-200 font-bold"><i class="fa-solid fa-moon text-purple-400 mr-1"></i>ダークモード</span>
+                    </label>
+                    <label class="flex items-center space-x-2 bg-slate-800 p-2 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-700">
+                        <input type="radio" name="themeRadio" value="light" onchange="setAppTheme('light')" id="themeLightRadio" class="accent-amber-500">
+                        <span class="text-slate-200 font-bold"><i class="fa-solid fa-sun text-amber-400 mr-1"></i>ライトモード（通常）</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- ダブルクリック動作切り替え設定 -->
+            <div class="mb-4 p-3 bg-slate-900/80 rounded-xl border border-slate-700">
+                <label class="block text-xs font-bold text-slate-200 mb-2">
+                    <i class="fa-solid fa-hand-pointer text-blue-400 mr-1.5"></i>ダブルクリック時の動作
+                </label>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <label class="flex items-center space-x-2 bg-slate-800 p-2 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-700">
+                        <input type="radio" name="dblClickRadio" value="zoom" onchange="setDblClickBehavior('zoom')" id="dblClickZoomRadio" class="accent-blue-500">
+                        <span class="text-slate-200 font-bold"><i class="fa-solid fa-magnifying-glass-plus text-amber-400 mr-1"></i>特大表示 (初期)</span>
+                    </label>
+                    <label class="flex items-center space-x-2 bg-slate-800 p-2 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-700">
+                        <input type="radio" name="dblClickRadio" value="edit" onchange="setDblClickBehavior('edit')" id="dblClickEditRadio" class="accent-blue-500">
+                        <span class="text-slate-200 font-bold"><i class="fa-solid fa-user-pen text-blue-400 mr-1"></i>編集画面を開く</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 表示エリア・必須・順序カスタマイズ -->
+            <div class="space-y-3">
+                <p class="text-xs text-slate-300">
+                    各項目の表示エリア（3段階）および順序を設定できます。
+                </p>
+
+                <div id="fieldSettingsList" class="space-y-2 text-xs">
+                    <!-- JSで動的生成 -->
+                </div>
+            </div>
+
+            <div class="mt-5 pt-3 border-t border-slate-700 flex justify-between items-center">
+                <button onclick="resetFieldSettings()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl text-xs font-medium cursor-pointer">
+                    初期状態に戻す
+                </button>
+                <button onclick="saveDisplaySettingsModal()" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl cursor-pointer shadow-lg">
+                    設定を保存して反映
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- データ管理モーダル（JSON & CSV 保存・復元） -->
+    <div id="dataModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
+        <div class="bg-slate-800 rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-700">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
+                <h3 class="text-base font-bold text-slate-100 flex items-center">
+                    <i class="fa-solid fa-database mr-2 text-cyan-400"></i>データのバックアップ・復元
+                </h3>
+                <button onclick="closeDataModal()" class="text-slate-400 hover:text-slate-200 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-xs">
+                <!-- 1. バックアップ出力 (JSON & CSV) -->
+                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-700 space-y-2">
+                    <h4 class="font-bold text-slate-200 flex items-center">
+                        <i class="fa-solid fa-download text-emerald-400 mr-1.5"></i>バックアップ保存 (書き出し)
+                    </h4>
+                    <p class="text-slate-400">登録されている全連絡先データを保存・ダウンロードします。</p>
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <button onclick="exportJSON()" class="py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition cursor-pointer text-center">
+                            <i class="fa-solid fa-file-code mr-1"></i>JSON保存
+                        </button>
+                        <button onclick="exportCSV()" class="py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl transition cursor-pointer text-center">
+                            <i class="fa-solid fa-file-excel mr-1"></i>CSV保存 (Excel用)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. データ復元・取り込み (JSON & CSV & TXT対応) -->
+                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-700 space-y-2">
+                    <h4 class="font-bold text-slate-200 flex items-center">
+                        <i class="fa-solid fa-upload text-cyan-400 mr-1.5"></i>データ復元 (取り込み)
+                    </h4>
+                    <p class="text-slate-400">スマホ・PCに保存したバックアップファイル (JSON/CSV) を選択して復元します。</p>
+                    <!-- accept属性を緩和してスマホでのファイル選択グレーアウトを防止 -->
+                    <input type="file" id="jsonFileInput" accept=".json,.csv,.txt,text/plain,text/csv,application/json,*/*" onchange="importDataFile(event)" class="hidden">
+                    <button onclick="document.getElementById('jsonFileInput').click()" class="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl transition cursor-pointer shadow-md">
+                        <i class="fa-solid fa-file-import mr-1"></i>ファイルを選択して復元 (JSON/CSV)
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-700 text-right">
+                <button onclick="closeDataModal()" class="px-4 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold rounded-xl cursor-pointer">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PWA ホーム画面追加ガイドモーダル -->
+    <div id="pwaModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
+        <div class="bg-slate-800 rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-700 text-xs text-slate-300">
+            <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-700">
+                <h3 class="text-base font-bold text-slate-100 flex items-center">
+                    <i class="fa-solid fa-mobile-screen-button text-purple-400 mr-2"></i>スマホアプリとして追加
+                </h3>
+                <button onclick="closePwaModal()" class="text-slate-400 hover:text-slate-200 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <p class="mb-3 text-slate-300">
+                本アプリはホーム画面に追加することで、単体のスマホアプリと同じように全画面で快適に起動できます。
+            </p>
+
+            <!-- ダイレクトインストールボタン (Android/Chrome対応) -->
+            <div id="pwaInstallPromptBtnArea" class="hidden mb-4 p-3 bg-purple-950/60 rounded-xl border border-purple-700/60 text-center">
+                <button onclick="triggerPwaInstall()" class="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center">
+                    <i class="fa-solid fa-download mr-2"></i>アプリとしてインストール
+                </button>
+            </div>
+
+            <div class="space-y-3">
+                <div class="p-3 bg-slate-900 rounded-xl border border-slate-700">
+                    <div class="font-bold text-amber-400 mb-1 flex items-center">
+                        <i class="fa-brands fa-apple mr-1.5 text-base"></i>iPhone (Safari) の場合
+                    </div>
+                    <ol class="list-decimal list-inside space-y-1 text-slate-300">
+                        <li>Safariの画面下部中央にある <strong>「共有」ボタン <i class="fa-solid fa-arrow-up-from-bracket text-blue-400"></i></strong> をタップ</li>
+                        <li>メニュー内の <strong>「ホーム画面に追加」 <i class="fa-regular fa-square-plus text-slate-300"></i></strong> を選択</li>
+                    </ol>
+                </div>
+
+                <div class="p-3 bg-slate-900 rounded-xl border border-slate-700">
+                    <div class="font-bold text-emerald-400 mb-1 flex items-center">
+                        <i class="fa-brands fa-android mr-1.5 text-base"></i>Android (Chrome) の場合
+                    </div>
+                    <ol class="list-decimal list-inside space-y-1 text-slate-300">
+                        <li>Chrome右上にある <strong>「3点メニュー」 <i class="fa-solid fa-ellipsis-vertical text-slate-300"></i></strong> をタップ</li>
+                        <li><strong>「アプリをインストール」</strong> または <strong>「ホーム画面に追加」</strong> を選択</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-700 text-right">
+                <button onclick="closePwaModal()" class="px-4 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold rounded-xl cursor-pointer">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 削除確認ダイアログ -->
+    <div id="deleteModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
+        <div class="bg-slate-800 rounded-2xl max-w-xs w-full p-5 shadow-2xl border border-slate-700 text-center">
+            <div class="w-12 h-12 bg-rose-500/20 text-rose-400 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-sm font-bold text-slate-100 mb-1">連絡先を削除しますか？</h3>
+            <p class="text-xs text-slate-400 mb-4">この操作は取り消せません。</p>
+            <div class="flex justify-center space-x-2 text-xs">
+                <button onclick="closeDeleteModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl font-bold cursor-pointer">
+                    キャンセル
+                </button>
+                <button onclick="confirmDelete()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold cursor-pointer shadow-lg shadow-rose-600/30">
+                    削除する
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- スマホ専用固定ボトムナビゲーション -->
+    <nav class="sm:hidden fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur-md border-t border-slate-700 z-30 px-3 py-2">
+        <div class="grid grid-cols-5 gap-1 text-center text-[10px]">
+            <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="text-slate-400 hover:text-blue-400 py-1 cursor-pointer">
+                <i class="fa-solid fa-magnifying-glass text-base block mb-0.5"></i>
+                <span>検索</span>
+            </button>
+            <button onclick="openSettingsModal()" class="text-slate-400 hover:text-amber-400 py-1 cursor-pointer">
+                <i class="fa-solid fa-gear text-base block mb-0.5"></i>
+                <span>設定</span>
+            </button>
+            <button onclick="openModal()" class="text-blue-400 font-bold py-1 cursor-pointer">
+                <div class="w-7 h-7 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-0.5 shadow-md">
+                    <i class="fa-solid fa-plus text-sm"></i>
+                </div>
+                <span>新規追加</span>
+            </button>
+            <button onclick="openDataModal()" class="text-slate-400 hover:text-cyan-400 py-1 cursor-pointer">
+                <i class="fa-solid fa-database text-base block mb-0.5"></i>
+                <span>保存/復元</span>
+            </button>
+            <button onclick="openPwaModal()" class="text-slate-400 hover:text-purple-400 py-1 cursor-pointer">
+                <i class="fa-solid fa-mobile-screen-button text-base block mb-0.5"></i>
+                <span>アプリ化</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- トースト通知コンテナ -->
+    <div id="toastContainer" class="fixed bottom-20 sm:bottom-6 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <!-- 外部JSファイル読み込み -->
+    <script src="app.js"></script>
+</body>
+</html>
