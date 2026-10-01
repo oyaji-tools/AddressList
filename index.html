@@ -2,7 +2,7 @@
 <html lang="ja" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>スマート住所録</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -28,18 +28,31 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@600;800&display=swap');
+        
         body {
             font-family: 'Noto Sans JP', sans-serif;
             transition: background-color 0.3s ease, color 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
         }
+
         .font-vertical {
             writing-mode: vertical-rl;
             text-orientation: upright;
             font-family: 'Shippori Mincho', 'Noto Serif JP', serif;
         }
+
+        /* スクロールバー非表示（モバイル快適化） */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
         }
         ::-webkit-scrollbar-track {
             background: rgba(0, 0, 0, 0.05);
@@ -136,7 +149,7 @@
             border-color: #e2e8f0 !important;
         }
         html.dark .sticky-header-bg {
-            background-color: rgba(15, 23, 42, 0.9) !important;
+            background-color: rgba(15, 23, 42, 0.92) !important;
             border-color: #334155 !important;
         }
 
@@ -160,18 +173,18 @@
         }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen pb-24 md:pb-10 selection:bg-blue-500 selection:text-white">
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-28 sm:pb-12 selection:bg-blue-500 selection:text-white">
 
     <!-- ヘッダー -->
-    <header class="bg-slate-800/90 backdrop-blur-md border-b border-slate-700/80 sticky top-0 z-30 px-4 py-3 shadow-md">
+    <header class="bg-slate-800/90 backdrop-blur-md border-b border-slate-700/80 sticky top-0 z-30 px-3 sm:px-4 py-2.5 shadow-md">
         <div class="max-w-6xl mx-auto flex items-center justify-between">
             <div class="flex items-center space-x-2">
-                <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/30">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-lg shadow-blue-500/30 shrink-0">
                     <i class="fa-solid fa-address-book"></i>
                 </div>
                 <div>
-                    <h1 class="text-base font-bold text-slate-100 leading-tight">スマート住所録</h1>
-                    <p class="text-[10px] text-slate-400">手書き参照・拡大・印刷対応</p>
+                    <h1 class="text-sm sm:text-base font-bold text-slate-100 leading-tight">スマート住所録</h1>
+                    <p class="text-[9px] sm:text-[10px] text-slate-400">手書き参照・拡大・印刷対応</p>
                 </div>
             </div>
 
@@ -211,29 +224,29 @@
     </header>
 
     <!-- 検索・フィルター・コントロールエリア (Sticky) -->
-    <section class="sticky top-[57px] z-20 sticky-header-bg border-b border-slate-800 shadow-lg backdrop-blur-md px-4 py-3">
-        <div class="max-w-6xl mx-auto space-y-2.5">
+    <section class="sticky top-[49px] sm:top-[57px] z-20 sticky-header-bg border-b border-slate-800 shadow-lg backdrop-blur-md px-3 sm:px-4 py-2.5">
+        <div class="max-w-6xl mx-auto space-y-2">
             <div class="flex flex-col sm:flex-row gap-2">
                 <!-- 検索窓 -->
-                <div class="relative flex-1">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <input type="text" id="searchInput" oninput="applyFilters()" placeholder="名前・フリガナ・住所・会社・メモで検索..."
-                           class="w-full pl-9 pr-8 py-2 bg-slate-800/90 border border-slate-700/80 rounded-xl text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                <div class="relative flex-1 w-full">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs sm:text-sm"></i>
+                    <input type="text" id="searchInput" oninput="applyFilters()" placeholder="名前・住所・会社・メモで検索..."
+                           class="w-full pl-8 sm:pl-9 pr-8 py-1.5 sm:py-2 bg-slate-800/90 border border-slate-700/80 rounded-xl text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                     <button onclick="clearSearch()" id="clearSearchBtn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200">
                         <i class="fa-solid fa-circle-xmark"></i>
                     </button>
                 </div>
 
-                <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-2 justify-between sm:justify-end w-full sm:w-auto">
                     <!-- 並び替え -->
-                    <select id="sortSelect" onchange="applyFilters()" class="bg-slate-800/90 border border-slate-700/80 text-xs text-slate-200 rounded-xl px-2.5 py-2 focus:outline-none focus:border-blue-500 cursor-pointer">
-                        <option value="custom">任意パターン順（登録順）</option>
+                    <select id="sortSelect" onchange="applyFilters()" class="flex-1 sm:flex-initial bg-slate-800/90 border border-slate-700/80 text-xs text-slate-200 rounded-xl px-2 py-1.5 focus:outline-none focus:border-blue-500 cursor-pointer">
+                        <option value="custom">登録順（標準）</option>
                         <option value="kanaAsc">五十音順 (ア→ン)</option>
                         <option value="kanaDesc">五十音順 (ン→ア)</option>
                     </select>
 
                     <!-- 表示モード切替（カード / 一覧） -->
-                    <div class="flex bg-slate-800 p-1 rounded-xl border border-slate-700/80">
+                    <div class="flex bg-slate-800 p-0.5 rounded-xl border border-slate-700/80 shrink-0">
                         <button id="viewCardBtn" onclick="switchViewMode('card')" class="px-2.5 py-1 text-xs rounded-lg transition font-medium cursor-pointer flex items-center space-x-1 bg-blue-600 text-white">
                             <i class="fa-solid fa-address-card"></i>
                             <span class="hidden md:inline">カード</span>
@@ -247,41 +260,41 @@
             </div>
 
             <!-- 50音クイックインデックスバー -->
-            <div id="kanaIndexContainer" class="flex items-center space-x-1 overflow-x-auto pb-1 text-[11px] no-scrollbar border-t border-b border-slate-700/50 py-1.5">
+            <div id="kanaIndexContainer" class="flex items-center space-x-1 overflow-x-auto pb-1 text-[11px] no-scrollbar border-t border-b border-slate-700/50 py-1.5 touch-pan-x">
                 <!-- JSで動的生成 -->
             </div>
 
             <!-- タグフィルター (横スクロール) -->
-            <div id="tagFilterContainer" class="flex items-center space-x-1.5 overflow-x-auto pb-0.5 pt-0.5 text-xs no-scrollbar">
+            <div id="tagFilterContainer" class="flex items-center space-x-1.5 overflow-x-auto pb-0.5 pt-0.5 text-xs no-scrollbar touch-pan-x">
                 <!-- JSで動的生成 -->
             </div>
         </div>
     </section>
 
     <!-- メインコンテンツ -->
-    <main class="max-w-6xl mx-auto px-4 pt-4">
+    <main class="max-w-6xl mx-auto px-3 sm:px-4 pt-3 sm:pt-4">
         <!-- ダブルクリック動作ガイド & 件数表示 -->
-        <div class="flex items-center justify-between mb-3 text-xs text-slate-400 px-1">
-            <span id="dblClickGuideText" class="flex items-center">
+        <div class="flex items-center justify-between mb-2 sm:mb-3 text-[11px] sm:text-xs text-slate-400 px-0.5">
+            <span id="dblClickGuideText" class="flex items-center truncate">
                 <i class="fa-solid fa-hand-pointer mr-1.5 text-blue-400"></i>
-                カード・行をダブルクリックで特大表示
+                タップ・ダブルクリックで参照
             </span>
-            <span id="contactCount" class="font-medium text-slate-300">0 件</span>
+            <span id="contactCount" class="font-medium text-slate-300 shrink-0 ml-2">0 件</span>
         </div>
 
         <!-- 連絡先リスト（カード表示ビュー） -->
-        <div id="cardViewContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+        <div id="cardViewContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             <!-- JSで動的生成 -->
         </div>
 
         <!-- 連絡先リスト（テーブル一覧表示ビュー） -->
         <div id="tableViewContainer" class="hidden overflow-x-auto bg-slate-800 rounded-2xl border border-slate-700/80 shadow-xl">
-            <table class="w-full text-left text-xs text-slate-300">
+            <table class="w-full text-left text-xs text-slate-300 min-w-[500px]">
                 <thead class="bg-slate-900/90 text-slate-400 uppercase font-bold border-b border-slate-700">
                     <tr>
-                        <th scope="col" class="py-3 px-3 w-20 text-center">操作</th>
-                        <th scope="col" class="py-3 px-2 w-14 text-center">順序</th>
-                        <th scope="col" class="py-3 px-4">お名前 / 住所 / 主要連絡先</th>
+                        <th scope="col" class="py-2.5 px-2 w-20 text-center">操作</th>
+                        <th scope="col" class="py-2.5 px-1 w-12 text-center">順序</th>
+                        <th scope="col" class="py-2.5 px-3">お名前 / 住所 / 主要連絡先</th>
                     </tr>
                 </thead>
                 <tbody id="tableTbody" class="divide-y divide-slate-700/50">
@@ -291,12 +304,12 @@
         </div>
 
         <!-- 空の状態メッセージ -->
-        <div id="emptyState" class="hidden text-center py-16 px-4">
-            <div class="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-700 text-slate-500">
+        <div id="emptyState" class="hidden text-center py-12 sm:py-16 px-4">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-slate-700 text-slate-500">
                 <i class="fa-solid fa-address-book text-2xl"></i>
             </div>
-            <h3 class="text-sm font-bold text-slate-300 mb-1">連絡先が見つかりません</h3>
-            <p class="text-xs text-slate-400 mb-4">新規登録するか、検索条件・タグ指定・50音フィルターを解除してください。</p>
+            <h3 class="text-xs sm:text-sm font-bold text-slate-300 mb-1">連絡先が見つかりません</h3>
+            <p class="text-[11px] sm:text-xs text-slate-400 mb-4">新規登録するか、検索条件・タグ指定・50音フィルターを解除してください。</p>
             <button onclick="openModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition">
                 <i class="fa-solid fa-plus mr-1"></i>新規登録する
             </button>
@@ -304,10 +317,10 @@
     </main>
 
     <!-- モーダル: 登録・編集 -->
-    <div id="contactModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3 sm:p-4">
-        <div class="bg-slate-800 rounded-2xl max-w-lg w-full p-5 shadow-2xl border border-slate-700 max-h-[92vh] flex flex-col">
-            <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-700 shrink-0">
-                <h3 id="modalTitle" class="text-base font-bold text-slate-100 flex items-center">
+    <div id="contactModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-2 sm:p-4">
+        <div class="bg-slate-800 rounded-2xl max-w-lg w-full p-4 sm:p-5 shadow-2xl border border-slate-700 max-h-[88dvh] sm:max-h-[92vh] flex flex-col my-auto">
+            <div class="flex justify-between items-center mb-2 sm:mb-3 pb-2 border-b border-slate-700 shrink-0">
+                <h3 id="modalTitle" class="text-sm sm:text-base font-bold text-slate-100 flex items-center">
                     <i class="fa-solid fa-user-pen mr-2 text-blue-400"></i>連絡先の登録
                 </h3>
                 <button onclick="closeModal()" class="text-slate-400 hover:text-slate-200 cursor-pointer p-1">
@@ -319,36 +332,36 @@
                 <input type="hidden" id="contactId">
 
                 <!-- 1. 固定表示エリア (常にフォーム最上部に固定) -->
-                <div id="fixedZoneContainer" class="space-y-3 bg-blue-950/40 p-3 rounded-xl border border-blue-900/60 shrink-0 mb-3">
-                    <div class="text-[10px] font-bold text-blue-400 flex items-center mb-1">
+                <div id="fixedZoneContainer" class="space-y-2.5 bg-blue-950/40 p-2.5 sm:p-3 rounded-xl border border-blue-900/60 shrink-0 mb-2 sm:mb-3">
+                    <div class="text-[10px] font-bold text-blue-400 flex items-center mb-0.5">
                         <i class="fa-solid fa-thumbtack mr-1"></i>固定表示エリア（必須項目）
                     </div>
                     <!-- JSで設定順に従ってフィールドを動的挿入 -->
                 </div>
 
                 <!-- 2. スクロール表示エリア (中身のみスクロール可能) -->
-                <div class="overflow-y-auto pr-1 space-y-3 flex-1">
-                    <div id="scrollZoneContainer" class="space-y-3">
+                <div class="overflow-y-auto pr-1 space-y-2.5 flex-1">
+                    <div id="scrollZoneContainer" class="space-y-2.5">
                         <!-- JSで設定順に従ってフィールドを動的挿入 -->
                     </div>
 
                     <!-- 3. 詳細表示エリア (アコーディオンボタン) -->
                     <div id="foldZoneWrapper" class="pt-2 border-t border-slate-700/60">
-                        <button type="button" onclick="toggleAccordion()" class="w-full py-2 px-3 bg-slate-900/80 hover:bg-slate-900 text-slate-300 rounded-xl border border-slate-700 flex justify-between items-center transition font-medium text-xs">
+                        <button type="button" onclick="toggleAccordion()" class="w-full py-1.5 sm:py-2 px-3 bg-slate-900/80 hover:bg-slate-900 text-slate-300 rounded-xl border border-slate-700 flex justify-between items-center transition font-medium text-xs">
                             <span class="flex items-center">
                                 <i class="fa-solid fa-sliders text-indigo-400 mr-2"></i>詳細項目を入力 (折りたたみ)
                             </span>
                             <i id="accordionIcon" class="fa-solid fa-chevron-down transition-transform duration-200 text-xs text-slate-400"></i>
                         </button>
 
-                        <div id="foldZoneContainer" class="hidden space-y-3 pt-3 pl-1 text-xs">
+                        <div id="foldZoneContainer" class="hidden space-y-2.5 pt-2.5 text-xs">
                             <!-- JSで設定順に従ってフィールドを動的挿入 -->
                         </div>
                     </div>
                 </div>
 
-                <div class="pt-4 flex justify-end space-x-2 border-t border-slate-700/80 shrink-0 mt-2 text-xs">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl font-bold cursor-pointer">
+                <div class="pt-3 flex justify-end space-x-2 border-t border-slate-700/80 shrink-0 mt-2 text-xs">
+                    <button type="button" onclick="closeModal()" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl font-bold cursor-pointer">
                         キャンセル
                     </button>
                     <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold cursor-pointer shadow-lg shadow-blue-600/30">
@@ -362,7 +375,7 @@
     <!-- DOMフィールド要素用の非表示バッファープール -->
     <div id="fieldsPool" class="hidden">
         <!-- お名前（姓・名） -->
-        <div id="fieldName" class="grid grid-cols-2 gap-2 text-xs">
+        <div id="fieldName" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             <div>
                 <label class="block font-bold text-slate-300 mb-1" id="lblLastName">姓 <span class="text-rose-400">*</span></label>
                 <input type="text" id="inputLastName" placeholder="山田" class="w-full p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500">
@@ -374,7 +387,7 @@
         </div>
 
         <!-- フリガナ（セイ・メイ） -->
-        <div id="fieldFurigana" class="grid grid-cols-2 gap-2 text-xs">
+        <div id="fieldFurigana" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             <div>
                 <label class="block font-bold text-slate-300 mb-1" id="lblLastFurigana">セイ</label>
                 <input type="text" id="inputLastFurigana" placeholder="ヤマダ" class="w-full p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500">
@@ -390,9 +403,9 @@
             <div>
                 <label class="block font-bold text-slate-300 mb-1" id="lblPostal">郵便番号 <span class="text-rose-400">*</span></label>
                 <div class="flex space-x-2">
-                    <input type="text" id="inputPostal" placeholder="100-0001 (皇居の例)" class="flex-1 p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500">
-                    <button type="button" onclick="searchAddress()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl whitespace-nowrap cursor-pointer">
-                        <i class="fa-solid fa-magnifying-glass mr-1"></i>住所検索
+                    <input type="text" id="inputPostal" placeholder="100-0001" class="flex-1 min-w-0 p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500">
+                    <button type="button" onclick="searchAddress()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl whitespace-nowrap cursor-pointer shrink-0">
+                        <i class="fa-solid fa-magnifying-glass mr-1"></i>検索
                     </button>
                 </div>
                 <span id="zipStatus" class="text-[10px] text-slate-400 mt-1 block"></span>
@@ -417,8 +430,8 @@
                     <!-- JSで動的追加 -->
                 </div>
                 <div class="flex space-x-2">
-                    <input type="text" id="inputTags" list="tagCandidateList" placeholder="例: 親戚, 年賀状" class="flex-1 p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500">
-                    <button type="button" onclick="addTagFromInput()" class="px-3 py-2 bg-pink-600 hover:bg-pink-500 text-white font-bold rounded-xl whitespace-nowrap cursor-pointer">
+                    <input type="text" id="inputTags" list="tagCandidateList" placeholder="例: 親戚, 年賀状" class="flex-1 min-w-0 p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500">
+                    <button type="button" onclick="addTagFromInput()" class="px-3 py-2 bg-pink-600 hover:bg-pink-500 text-white font-bold rounded-xl whitespace-nowrap cursor-pointer shrink-0">
                         追加
                     </button>
                 </div>
@@ -437,8 +450,8 @@
                     <!-- JSで動的追加 -->
                 </div>
                 <div class="flex space-x-2">
-                    <input type="text" id="inputGiftNotes" list="giftCandidateList" placeholder="例: 2026年賀状送付済, お中元受領" class="flex-1 p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500">
-                    <button type="button" onclick="addGiftNoteFromInput()" class="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl whitespace-nowrap cursor-pointer">
+                    <input type="text" id="inputGiftNotes" list="giftCandidateList" placeholder="例: 2026年賀状送付済" class="flex-1 min-w-0 p-2 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500">
+                    <button type="button" onclick="addGiftNoteFromInput()" class="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl whitespace-nowrap cursor-pointer shrink-0">
                         追加
                     </button>
                 </div>
@@ -469,73 +482,73 @@
     </div>
 
     <!-- 特大表示モーダル (高齢者向け拡大参照モード) -->
-    <div id="zoomModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-3 sm:p-6 overflow-y-auto">
-        <div class="bg-slate-900 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border-2 border-amber-500/60 my-auto text-slate-100 relative">
-            <div class="flex justify-between items-start mb-4 pb-3 border-b border-slate-800">
+    <div id="zoomModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-2 sm:p-6 overflow-y-auto">
+        <div class="bg-slate-900 rounded-3xl max-w-2xl w-full p-4 sm:p-8 shadow-2xl border-2 border-amber-500/60 my-auto text-slate-100 relative max-h-[92dvh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-slate-800">
                 <div>
-                    <span class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 mb-1">
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 mb-1">
                         <i class="fa-solid fa-glasses mr-1"></i>手書き参照用 特大表示
                     </span>
-                    <h3 class="text-xl font-bold text-white">拡大参照画面</h3>
+                    <h3 class="text-lg sm:text-xl font-bold text-white">拡大参照画面</h3>
                 </div>
                 <div class="flex items-center space-x-2">
                     <!-- 倍率選択コントロール -->
-                    <div class="flex bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs">
-                        <button onclick="setZoomScale(1)" id="zoomScale100" class="px-2 py-1 rounded-lg transition font-bold bg-amber-500 text-slate-950">100%</button>
-                        <button onclick="setZoomScale(1.25)" id="zoomScale125" class="px-2 py-1 rounded-lg transition font-bold text-slate-300 hover:text-white">125%</button>
-                        <button onclick="setZoomScale(1.5)" id="zoomScale150" class="px-2 py-1 rounded-lg transition font-bold text-slate-300 hover:text-white">150%</button>
-                        <button onclick="setZoomScale(1.8)" id="zoomScale180" class="px-2 py-1 rounded-lg transition font-bold text-slate-300 hover:text-white">180%</button>
+                    <div class="flex bg-slate-800 p-0.5 sm:p-1 rounded-xl border border-slate-700 text-[10px] sm:text-xs">
+                        <button onclick="setZoomScale(1)" id="zoomScale100" class="px-1.5 sm:px-2 py-1 rounded-lg transition font-bold bg-amber-500 text-slate-950">100%</button>
+                        <button onclick="setZoomScale(1.25)" id="zoomScale125" class="px-1.5 sm:px-2 py-1 rounded-lg transition font-bold text-slate-300 hover:text-white">125%</button>
+                        <button onclick="setZoomScale(1.5)" id="zoomScale150" class="px-1.5 sm:px-2 py-1 rounded-lg transition font-bold text-slate-300 hover:text-white">150%</button>
+                        <button onclick="setZoomScale(1.8)" id="zoomScale180" class="px-1.5 sm:px-2 py-1 rounded-lg transition font-bold text-slate-300 hover:text-white">180%</button>
                     </div>
                     <button onclick="closeZoomModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
-                        <i class="fa-solid fa-xmark text-2xl"></i>
+                        <i class="fa-solid fa-xmark text-xl sm:text-2xl"></i>
                     </button>
                 </div>
             </div>
 
             <!-- スケール可変コンテナ -->
-            <div id="zoomScaleContainer" class="transition-transform duration-200 origin-top-left space-y-6">
+            <div id="zoomScaleContainer" class="transition-transform duration-200 origin-top-left space-y-4 sm:space-y-6">
                 <!-- 氏名・連名エリア -->
-                <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800">
-                    <div id="zoomFurigana" class="text-amber-400/90 text-sm sm:text-base font-bold tracking-widest mb-1">ヤマダ タロウ</div>
-                    <div class="flex items-baseline space-x-3">
-                        <div id="zoomName" class="text-3xl sm:text-4xl font-black text-white tracking-wider">山田 太郎</div>
-                        <span class="text-xl font-bold text-slate-400">様</span>
+                <div class="bg-slate-950 p-3.5 sm:p-5 rounded-2xl border border-slate-800">
+                    <div id="zoomFurigana" class="text-amber-400/90 text-xs sm:text-base font-bold tracking-widest mb-1">ヤマダ タロウ</div>
+                    <div class="flex items-baseline space-x-2 sm:space-x-3 flex-wrap">
+                        <div id="zoomName" class="text-2xl sm:text-4xl font-black text-white tracking-wider break-all">山田 太郎</div>
+                        <span class="text-lg sm:text-xl font-bold text-slate-400">様</span>
                     </div>
-                    <div id="zoomJointName" class="text-lg sm:text-xl font-bold text-cyan-300 mt-2 hidden">
+                    <div id="zoomJointName" class="text-base sm:text-xl font-bold text-cyan-300 mt-2 hidden">
                         <i class="fa-solid fa-users mr-1.5 text-xs"></i>連名: <span id="zoomJointNameText"></span>
                     </div>
                 </div>
 
                 <!-- 郵便番号・住所エリア -->
-                <div class="bg-amber-950/40 p-5 rounded-2xl border-2 border-amber-500/50 space-y-3">
+                <div class="bg-amber-950/40 p-3.5 sm:p-5 rounded-2xl border-2 border-amber-500/50 space-y-2.5 sm:space-y-3">
                     <div class="flex items-center justify-between flex-wrap gap-2">
                         <div class="text-amber-400 font-bold text-xs uppercase tracking-wider flex items-center">
                             <i class="fa-solid fa-location-dot mr-1.5"></i>郵便番号・住所
                         </div>
                         <div class="flex items-center space-x-2">
-                            <button id="zoomCopyBtn" onclick="copyAddressFromZoom()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl transition cursor-pointer shadow-md flex items-center">
-                                <i class="fa-solid fa-copy mr-1"></i>住所コピー
+                            <button id="zoomCopyBtn" onclick="copyAddressFromZoom()" class="px-2.5 sm:px-3 py-1 sm:py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl transition cursor-pointer shadow-md flex items-center">
+                                <i class="fa-solid fa-copy mr-1"></i>コピー
                             </button>
-                            <button id="zoomShareBtn" onclick="shareContactTextFromZoom()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl transition cursor-pointer shadow-md flex items-center">
-                                <i class="fa-solid fa-share-nodes mr-1"></i>一括コピー
+                            <button id="zoomShareBtn" onclick="shareContactTextFromZoom()" class="px-2.5 sm:px-3 py-1 sm:py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl transition cursor-pointer shadow-md flex items-center">
+                                <i class="fa-solid fa-share-nodes mr-1"></i>一括
                             </button>
                         </div>
                     </div>
-                    <div id="zoomPostal" class="text-xl sm:text-2xl font-mono font-bold text-amber-200">〒 100-0001</div>
-                    <div id="zoomAddress" class="text-2xl sm:text-3xl font-black text-white leading-relaxed tracking-wide border-t border-amber-500/30 pt-3">
+                    <div id="zoomPostal" class="text-lg sm:text-2xl font-mono font-bold text-amber-200">〒 100-0001</div>
+                    <div id="zoomAddress" class="text-xl sm:text-3xl font-black text-white leading-relaxed tracking-wide border-t border-amber-500/30 pt-2.5 sm:pt-3 break-all">
                         東京都千代田区千代田1-1
                     </div>
                 </div>
 
                 <!-- その他詳細情報 -->
-                <div id="zoomDetails" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div id="zoomDetails" class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs">
                     <div id="zoomPhoneBox" class="bg-slate-950 p-3 rounded-xl border border-slate-800 hidden">
                         <span class="text-slate-400 font-bold block mb-0.5">電話番号</span>
-                        <span id="zoomPhone" class="text-base font-bold text-emerald-400"></span>
+                        <span id="zoomPhone" class="text-sm sm:text-base font-bold text-emerald-400"></span>
                     </div>
                     <div id="zoomCompanyBox" class="bg-slate-950 p-3 rounded-xl border border-slate-800 hidden">
                         <span class="text-slate-400 font-bold block mb-0.5">会社名 / 所属</span>
-                        <span id="zoomCompany" class="text-sm font-bold text-purple-300"></span>
+                        <span id="zoomCompany" class="text-xs sm:text-sm font-bold text-purple-300"></span>
                     </div>
                 </div>
 
@@ -545,12 +558,12 @@
                 </div>
             </div>
 
-            <div class="mt-6 pt-4 border-t border-slate-800 flex justify-between items-center">
-                <button id="zoomPrintBtn" onclick="openPrintModalFromZoom()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl cursor-pointer transition flex items-center space-x-1.5">
+            <div class="mt-5 pt-3 sm:pt-4 border-t border-slate-800 flex justify-between items-center gap-2">
+                <button id="zoomPrintBtn" onclick="openPrintModalFromZoom()" class="px-3 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl cursor-pointer transition flex items-center space-x-1.5 shrink-0">
                     <i class="fa-solid fa-print"></i>
                     <span>ハガキ宛名印刷</span>
                 </button>
-                <button onclick="closeZoomModal()" class="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm rounded-xl cursor-pointer transition border border-slate-700">
+                <button onclick="closeZoomModal()" class="px-5 sm:px-8 py-2 sm:py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm rounded-xl cursor-pointer transition border border-slate-700">
                     閉じる
                 </button>
             </div>
@@ -559,9 +572,9 @@
 
     <!-- ハガキ宛名印刷プレビューモーダル -->
     <div id="printModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-3 sm:p-6 overflow-y-auto">
-        <div class="bg-slate-900 rounded-3xl max-w-lg w-full p-5 shadow-2xl border border-slate-700 text-slate-100 my-auto">
+        <div class="bg-slate-900 rounded-3xl max-w-lg w-full p-4 sm:p-5 shadow-2xl border border-slate-700 text-slate-100 my-auto max-h-[92dvh] overflow-y-auto">
             <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
-                <h3 class="text-base font-bold text-slate-100 flex items-center">
+                <h3 class="text-sm sm:text-base font-bold text-slate-100 flex items-center">
                     <i class="fa-solid fa-print text-emerald-400 mr-2"></i>ハガキ宛名 印刷プレビュー
                 </h3>
                 <button onclick="closePrintModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
@@ -572,47 +585,47 @@
             <p class="text-xs text-slate-400 mb-3">ハガキサイズでの宛名印刷用プレビューです。「印刷を実行」ボタンを押すとプリンター出力・PDF保存が可能です。</p>
 
             <!-- 縦書きハガキプレビュー領域 (印刷時に抽出されるエリア) -->
-            <div id="printTargetArea" class="w-[240px] h-[360px] mx-auto bg-white text-black p-4 rounded-xl shadow-xl border border-slate-300 relative overflow-hidden flex flex-col justify-between">
+            <div id="printTargetArea" class="w-[220px] sm:w-[240px] h-[330px] sm:h-[360px] mx-auto bg-white text-black p-4 rounded-xl shadow-xl border border-slate-300 relative overflow-hidden flex flex-col justify-between">
                 <!-- 郵便番号欄 (右上) -->
-                <div class="flex justify-end space-x-1 font-mono font-bold text-red-600 text-sm tracking-wider pt-1 pr-1">
+                <div class="flex justify-end space-x-1 font-mono font-bold text-red-600 text-xs sm:text-sm tracking-wider pt-1 pr-1">
                     <span id="printPostalCode">100-0001</span>
                 </div>
 
-                <div class="flex justify-between items-start h-[260px] px-2 pt-2">
+                <div class="flex justify-between items-start h-[230px] sm:h-[260px] px-1 sm:px-2 pt-2">
                     <!-- 受取人 氏名 (中央・巨大縦書き) -->
-                    <div class="font-vertical text-2xl font-bold tracking-widest my-auto text-black pl-4">
+                    <div class="font-vertical text-xl sm:text-2xl font-bold tracking-widest my-auto text-black pl-2 sm:pl-4">
                         <span id="printName">山田 太郎</span>
-                        <span class="text-lg font-normal ml-1">様</span>
+                        <span class="text-base sm:text-lg font-normal ml-1">様</span>
                     </div>
 
                     <!-- 住所 (右側・縦書き) -->
-                    <div class="font-vertical text-xs font-semibold leading-relaxed text-slate-800 pr-1 max-h-[220px]">
+                    <div class="font-vertical text-[11px] sm:text-xs font-semibold leading-relaxed text-slate-800 pr-1 max-h-[200px] sm:max-h-[220px]">
                         <span id="printAddress">東京都千代田区千代田１－１</span>
                     </div>
                 </div>
 
-                <div class="text-[9px] text-slate-400 text-center border-t border-slate-200 pt-1">
+                <div class="text-[8px] sm:text-[9px] text-slate-400 text-center border-t border-slate-200 pt-1">
                     スマート住所録 宛名プレビュー
                 </div>
             </div>
 
             <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end space-x-2 text-xs">
-                <button onclick="closePrintModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl font-bold cursor-pointer">
+                <button onclick="closePrintModal()" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl font-bold cursor-pointer">
                     閉じる
                 </button>
-                <button onclick="window.print()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg cursor-pointer flex items-center space-x-1.5">
+                <button onclick="window.print()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg cursor-pointer flex items-center space-x-1.5">
                     <i class="fa-solid fa-print"></i>
-                    <span>印刷を実行 (またはPDF保存)</span>
+                    <span>印刷を実行 (PDF保存)</span>
                 </button>
             </div>
         </div>
     </div>
 
     <!-- 表示設定モーダル -->
-    <div id="settingsModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
-        <div class="bg-slate-800 rounded-2xl max-w-lg w-full p-5 shadow-2xl border border-slate-700 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-700">
-                <h3 class="text-base font-bold text-slate-100 flex items-center">
+    <div id="settingsModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3 sm:p-4">
+        <div class="bg-slate-800 rounded-2xl max-w-lg w-full p-4 sm:p-5 shadow-2xl border border-slate-700 max-h-[90dvh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-3 pb-2 sm:pb-3 border-b border-slate-700">
+                <h3 class="text-sm sm:text-base font-bold text-slate-100 flex items-center">
                     <i class="fa-solid fa-gear mr-2 text-amber-400"></i>表示位置・順序・動作設定
                 </h3>
                 <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-200 cursor-pointer">
@@ -621,41 +634,41 @@
             </div>
 
             <!-- カラーテーマ切り替え設定 -->
-            <div class="mb-4 p-3 bg-slate-900/80 rounded-xl border border-slate-700">
+            <div class="mb-3.5 p-3 bg-slate-900/80 rounded-xl border border-slate-700">
                 <label class="block text-xs font-bold text-slate-200 mb-2">
                     <i class="fa-solid fa-palette text-purple-400 mr-1.5"></i>カラーテーマ設定
                 </label>
                 <div class="grid grid-cols-2 gap-2 text-xs">
-                    <label class="flex items-center space-x-2 bg-slate-800 p-2 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-700">
+                    <label class="flex items-center space-x-1.5 bg-slate-800 p-2 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-700">
                         <input type="radio" name="themeRadio" value="dark" onchange="setAppTheme('dark')" id="themeDarkRadio" class="accent-purple-500">
-                        <span class="text-slate-200 font-bold"><i class="fa-solid fa-moon text-purple-400 mr-1"></i>ダークモード</span>
+                        <span class="text-slate-200 font-bold"><i class="fa-solid fa-moon text-purple-400 mr-1"></i>ダーク</span>
                     </label>
-                    <label class="flex items-center space-x-2 bg-slate-800 p-2 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-700">
+                    <label class="flex items-center space-x-1.5 bg-slate-800 p-2 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-700">
                         <input type="radio" name="themeRadio" value="light" onchange="setAppTheme('light')" id="themeLightRadio" class="accent-amber-500">
-                        <span class="text-slate-200 font-bold"><i class="fa-solid fa-sun text-amber-400 mr-1"></i>ライトモード（通常）</span>
+                        <span class="text-slate-200 font-bold"><i class="fa-solid fa-sun text-amber-400 mr-1"></i>ライト</span>
                     </label>
                 </div>
             </div>
 
             <!-- ダブルクリック動作切り替え設定 -->
-            <div class="mb-4 p-3 bg-slate-900/80 rounded-xl border border-slate-700">
+            <div class="mb-3.5 p-3 bg-slate-900/80 rounded-xl border border-slate-700">
                 <label class="block text-xs font-bold text-slate-200 mb-2">
                     <i class="fa-solid fa-hand-pointer text-blue-400 mr-1.5"></i>ダブルクリック時の動作
                 </label>
                 <div class="grid grid-cols-2 gap-2 text-xs">
-                    <label class="flex items-center space-x-2 bg-slate-800 p-2 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-700">
+                    <label class="flex items-center space-x-1.5 bg-slate-800 p-2 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-700">
                         <input type="radio" name="dblClickRadio" value="zoom" onchange="setDblClickBehavior('zoom')" id="dblClickZoomRadio" class="accent-blue-500">
-                        <span class="text-slate-200 font-bold"><i class="fa-solid fa-magnifying-glass-plus text-amber-400 mr-1"></i>特大表示 (初期)</span>
+                        <span class="text-slate-200 font-bold truncate"><i class="fa-solid fa-magnifying-glass-plus text-amber-400 mr-1"></i>特大表示</span>
                     </label>
-                    <label class="flex items-center space-x-2 bg-slate-800 p-2 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-700">
+                    <label class="flex items-center space-x-1.5 bg-slate-800 p-2 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-700">
                         <input type="radio" name="dblClickRadio" value="edit" onchange="setDblClickBehavior('edit')" id="dblClickEditRadio" class="accent-blue-500">
-                        <span class="text-slate-200 font-bold"><i class="fa-solid fa-user-pen text-blue-400 mr-1"></i>編集画面を開く</span>
+                        <span class="text-slate-200 font-bold truncate"><i class="fa-solid fa-user-pen text-blue-400 mr-1"></i>編集画面</span>
                     </label>
                 </div>
             </div>
 
             <!-- 表示エリア・必須・順序カスタマイズ -->
-            <div class="space-y-3">
+            <div class="space-y-2.5">
                 <p class="text-xs text-slate-300">
                     各項目の表示エリア（3段階）および順序を設定できます。
                 </p>
@@ -665,22 +678,22 @@
                 </div>
             </div>
 
-            <div class="mt-5 pt-3 border-t border-slate-700 flex justify-between items-center">
+            <div class="mt-4 pt-3 border-t border-slate-700 flex justify-between items-center">
                 <button onclick="resetFieldSettings()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl text-xs font-medium cursor-pointer">
                     初期状態に戻す
                 </button>
-                <button onclick="saveDisplaySettingsModal()" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl cursor-pointer shadow-lg">
-                    設定を保存して反映
+                <button onclick="saveDisplaySettingsModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl cursor-pointer shadow-lg">
+                    保存して反映
                 </button>
             </div>
         </div>
     </div>
 
     <!-- データ管理モーダル（JSON & CSV 保存・復元） -->
-    <div id="dataModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
-        <div class="bg-slate-800 rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-700">
-            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
-                <h3 class="text-base font-bold text-slate-100 flex items-center">
+    <div id="dataModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3 sm:p-4">
+        <div class="bg-slate-800 rounded-2xl max-w-md w-full p-4 sm:p-5 shadow-2xl border border-slate-700">
+            <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-700">
+                <h3 class="text-sm sm:text-base font-bold text-slate-100 flex items-center">
                     <i class="fa-solid fa-database mr-2 text-cyan-400"></i>データのバックアップ・復元
                 </h3>
                 <button onclick="closeDataModal()" class="text-slate-400 hover:text-slate-200 cursor-pointer">
@@ -688,7 +701,7 @@
                 </button>
             </div>
 
-            <div class="space-y-4 text-xs">
+            <div class="space-y-3 sm:space-y-4 text-xs">
                 <!-- 1. バックアップ出力 (JSON & CSV) -->
                 <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-700 space-y-2">
                     <h4 class="font-bold text-slate-200 flex items-center">
@@ -700,7 +713,7 @@
                             <i class="fa-solid fa-file-code mr-1"></i>JSON保存
                         </button>
                         <button onclick="exportCSV()" class="py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl transition cursor-pointer text-center">
-                            <i class="fa-solid fa-file-excel mr-1"></i>CSV保存 (Excel用)
+                            <i class="fa-solid fa-file-excel mr-1"></i>CSV保存
                         </button>
                     </div>
                 </div>
@@ -711,16 +724,15 @@
                         <i class="fa-solid fa-upload text-cyan-400 mr-1.5"></i>データ復元 (取り込み)
                     </h4>
                     <p class="text-slate-400">スマホ・PCに保存したバックアップファイル (JSON/CSV) を選択して復元します。</p>
-                    <!-- accept属性を緩和してスマホでのファイル選択グレーアウトを防止 -->
                     <input type="file" id="jsonFileInput" accept=".json,.csv,.txt,text/plain,text/csv,application/json,*/*" onchange="importDataFile(event)" class="hidden">
                     <button onclick="document.getElementById('jsonFileInput').click()" class="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl transition cursor-pointer shadow-md">
-                        <i class="fa-solid fa-file-import mr-1"></i>ファイルを選択して復元 (JSON/CSV)
+                        <i class="fa-solid fa-file-import mr-1"></i>ファイルを選択して復元
                     </button>
                 </div>
             </div>
 
             <div class="mt-4 pt-3 border-t border-slate-700 text-right">
-                <button onclick="closeDataModal()" class="px-4 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold rounded-xl cursor-pointer">
+                <button onclick="closeDataModal()" class="px-4 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold rounded-xl cursor-pointer text-xs">
                     閉じる
                 </button>
             </div>
@@ -728,10 +740,10 @@
     </div>
 
     <!-- PWA ホーム画面追加ガイドモーダル -->
-    <div id="pwaModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
-        <div class="bg-slate-800 rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-700 text-xs text-slate-300">
+    <div id="pwaModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3 sm:p-4">
+        <div class="bg-slate-800 rounded-2xl max-w-md w-full p-4 sm:p-5 shadow-2xl border border-slate-700 text-xs text-slate-300">
             <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-700">
-                <h3 class="text-base font-bold text-slate-100 flex items-center">
+                <h3 class="text-sm sm:text-base font-bold text-slate-100 flex items-center">
                     <i class="fa-solid fa-mobile-screen-button text-purple-400 mr-2"></i>スマホアプリとして追加
                 </h3>
                 <button onclick="closePwaModal()" class="text-slate-400 hover:text-slate-200 cursor-pointer">
@@ -743,31 +755,30 @@
                 本アプリはホーム画面に追加することで、単体のスマホアプリと同じように全画面で快適に起動できます。
             </p>
 
-            <!-- ダイレクトインストールボタン (Android/Chrome対応) -->
-            <div id="pwaInstallPromptBtnArea" class="hidden mb-4 p-3 bg-purple-950/60 rounded-xl border border-purple-700/60 text-center">
+            <div id="pwaInstallPromptBtnArea" class="hidden mb-3 p-3 bg-purple-950/60 rounded-xl border border-purple-700/60 text-center">
                 <button onclick="triggerPwaInstall()" class="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center">
                     <i class="fa-solid fa-download mr-2"></i>アプリとしてインストール
                 </button>
             </div>
 
-            <div class="space-y-3">
-                <div class="p-3 bg-slate-900 rounded-xl border border-slate-700">
+            <div class="space-y-2.5">
+                <div class="p-2.5 bg-slate-900 rounded-xl border border-slate-700">
                     <div class="font-bold text-amber-400 mb-1 flex items-center">
                         <i class="fa-brands fa-apple mr-1.5 text-base"></i>iPhone (Safari) の場合
                     </div>
                     <ol class="list-decimal list-inside space-y-1 text-slate-300">
-                        <li>Safariの画面下部中央にある <strong>「共有」ボタン <i class="fa-solid fa-arrow-up-from-bracket text-blue-400"></i></strong> をタップ</li>
+                        <li>Safariの画面下部中央にある <strong>「共有」 <i class="fa-solid fa-arrow-up-from-bracket text-blue-400"></i></strong> をタップ</li>
                         <li>メニュー内の <strong>「ホーム画面に追加」 <i class="fa-regular fa-square-plus text-slate-300"></i></strong> を選択</li>
                     </ol>
                 </div>
 
-                <div class="p-3 bg-slate-900 rounded-xl border border-slate-700">
+                <div class="p-2.5 bg-slate-900 rounded-xl border border-slate-700">
                     <div class="font-bold text-emerald-400 mb-1 flex items-center">
                         <i class="fa-brands fa-android mr-1.5 text-base"></i>Android (Chrome) の場合
                     </div>
                     <ol class="list-decimal list-inside space-y-1 text-slate-300">
                         <li>Chrome右上にある <strong>「3点メニュー」 <i class="fa-solid fa-ellipsis-vertical text-slate-300"></i></strong> をタップ</li>
-                        <li><strong>「アプリをインストール」</strong> または <strong>「ホーム画面に追加」</strong> を選択</li>
+                        <li><strong>「アプリをインストール」</strong> を選択</li>
                     </ol>
                 </div>
             </div>
@@ -800,7 +811,7 @@
     </div>
 
     <!-- スマホ専用固定ボトムナビゲーション -->
-    <nav class="sm:hidden fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur-md border-t border-slate-700 z-30 px-3 py-2">
+    <nav class="sm:hidden fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur-md border-t border-slate-700/80 z-30 px-2 py-1.5">
         <div class="grid grid-cols-5 gap-1 text-center text-[10px]">
             <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="text-slate-400 hover:text-blue-400 py-1 cursor-pointer">
                 <i class="fa-solid fa-magnifying-glass text-base block mb-0.5"></i>
@@ -812,7 +823,7 @@
             </button>
             <button onclick="openModal()" class="text-blue-400 font-bold py-1 cursor-pointer">
                 <div class="w-7 h-7 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-0.5 shadow-md">
-                    <i class="fa-solid fa-plus text-sm"></i>
+                    <i class="fa-solid fa-plus text-xs"></i>
                 </div>
                 <span>新規追加</span>
             </button>
@@ -828,27 +839,25 @@
     </nav>
 
     <!-- トースト通知コンテナ -->
-    <div id="toastContainer" class="fixed bottom-20 sm:bottom-6 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+    <div id="toastContainer" class="fixed bottom-20 sm:bottom-6 right-4 left-4 sm:left-auto z-50 flex flex-col space-y-2 pointer-events-none items-center sm:items-end"></div>
 
     <!-- アプリ機能スクリプト -->
     <script>
         let contacts = [];
         let deleteTargetId = null;
         let selectedFilterTag = 'ALL';
-        let selectedKanaIndex = 'ALL'; // 五十音フィルター ('ALL', 'ア', 'カ', 'サ', 'タ', 'ナ', 'ハ', 'マ', 'ヤ', 'ラ', 'ワ')
-        let currentViewMode = 'card'; // 'card' または 'table'
-        let doubleClickBehavior = 'zoom'; // 'zoom' または 'edit'
-        let currentAppTheme = 'dark'; // 'dark' または 'light'
-        let draggedIndex = null; // ドラッグアンドドロップ用
-        let currentZoomScale = 1; // 拡大表示の文字倍率 (1, 1.25, 1.5, 1.8)
+        let selectedKanaIndex = 'ALL';
+        let currentViewMode = 'card';
+        let doubleClickBehavior = 'zoom';
+        let currentAppTheme = 'dark';
+        let draggedIndex = null;
+        let currentZoomScale = 1;
         let deferredPrompt = null;
         let printTargetId = null;
 
-        // モーダル編集中のタグデータ一時保持配列
         let currentModalTags = [];
         let currentModalGiftNotes = [];
 
-        // ご指定通りの初期順序・表示位置（3段階）・必須設定
         let fieldSettings = [
             { id: 'name', name: 'お名前（姓・名）', elId: 'fieldName', inputIds: ['inputLastName', 'inputFirstName'], icon: 'fa-user', color: 'text-blue-400', zone: 'fixed', isLocked: true, isRequired: true },
             { id: 'address', name: '郵便番号・住所', elId: 'fieldAddress', inputIds: ['inputAddress'], icon: 'fa-location-dot', color: 'text-emerald-400', zone: 'fixed', isLocked: true, isRequired: true },
@@ -861,7 +870,6 @@
             { id: 'notes', name: '自由メモ', elId: 'fieldNotes', inputIds: ['inputNotes'], icon: 'fa-note-sticky', color: 'text-sky-400', zone: 'fold', isLocked: false, isRequired: false }
         ];
 
-        // ページロード時初期化
         window.addEventListener('DOMContentLoaded', () => {
             loadContacts();
             loadDisplaySettings();
@@ -869,7 +877,6 @@
             applyFilters();
             initPWA();
 
-            // インプットキー入力（Enterキーでタグ追加）イベントの登録
             document.getElementById('inputTags')?.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -887,12 +894,10 @@
         function normalizeContactsData() {
             if (!Array.isArray(contacts)) return;
             contacts.forEach(c => {
-                // 郵便番号キーの標準化 (postal, zip, zipCode, postalCode)
                 const postalVal = c.postal || c.zip || c.zipCode || c.postalCode || c.postal_code || '';
                 c.postal = postalVal;
                 c.zip = postalVal;
 
-                // 氏名・各フィールドのフォールバック
                 if (c.lastName === undefined) c.lastName = c.name || '';
                 if (c.firstName === undefined) c.firstName = '';
                 if (c.lastFurigana === undefined) c.lastFurigana = c.kana || '';
@@ -912,7 +917,7 @@
                         fieldSettings = parsed;
                     }
                 } catch(e) {
-                    console.error('表示設定の読み込みエラー:', e);
+                    console.error('表示設定読み込みエラー:', e);
                 }
             }
 
@@ -992,16 +997,16 @@
             doubleClickBehavior = behavior;
             localStorage.setItem('address_book_dblclick_behavior', behavior);
             updateDblClickGuideText();
-            showToast(behavior === 'zoom' ? 'ダブルクリック動作を「特大表示」に変更しました' : 'ダブルクリック動作を「編集画面を開く」に変更しました', 'info');
+            showToast(behavior === 'zoom' ? '動作を「特大表示」に変更しました' : '動作を「編集画面」に変更しました', 'info');
         }
 
         function updateDblClickGuideText() {
             const guideEl = document.getElementById('dblClickGuideText');
             if (guideEl) {
                 if (doubleClickBehavior === 'edit') {
-                    guideEl.innerHTML = `<i class="fa-solid fa-user-pen mr-1.5 text-blue-400"></i>カード・行をダブルクリックで編集画面`;
+                    guideEl.innerHTML = `<i class="fa-solid fa-user-pen mr-1.5 text-blue-400"></i>ダブルクリックで編集画面`;
                 } else {
-                    guideEl.innerHTML = `<i class="fa-solid fa-magnifying-glass-plus mr-1.5 text-amber-400"></i>カード・行をダブルクリックで特大表示`;
+                    guideEl.innerHTML = `<i class="fa-solid fa-magnifying-glass-plus mr-1.5 text-amber-400"></i>ダブルクリックで特大表示`;
                 }
             }
         }
@@ -1430,7 +1435,7 @@
                     const result = data.results[0];
                     const fullAddr = `${result.address1}${result.address2}${result.address3}`;
                     document.getElementById('inputAddress').value = fullAddr;
-                    statusEl.textContent = '✓ 住所を補完しました';
+                    statusEl.textContent = '✓ 住所を自動検索・補完しました';
                     statusEl.className = 'text-[10px] text-emerald-400 mt-1 block';
                 } else {
                     statusEl.textContent = '住所が見つかりませんでした';
@@ -1443,7 +1448,6 @@
             }
         }
 
-        /* 50音インデックスバー描画 */
         function renderKanaIndexBar() {
             const container = document.getElementById('kanaIndexContainer');
             if (!container) return;
@@ -1463,7 +1467,7 @@
             ];
 
             container.innerHTML = kanaList.map(k => `
-                <button onclick="filterByKana('${k.value}')" class="px-2.5 py-1 rounded-lg font-bold whitespace-nowrap transition cursor-pointer ${selectedKanaIndex === k.value ? 'bg-amber-500 text-slate-950 shadow' : 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80'}">
+                <button onclick="filterByKana('${k.value}')" class="px-2.5 py-1 rounded-lg font-bold whitespace-nowrap transition cursor-pointer shrink-0 ${selectedKanaIndex === k.value ? 'bg-amber-500 text-slate-950 shadow' : 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80'}">
                     ${k.label}
                 </button>
             `).join('');
@@ -1503,20 +1507,17 @@
             renderTagFilterBar();
 
             let filtered = contacts.filter(item => {
-                // 50音行フィルター
                 if (selectedKanaIndex !== 'ALL') {
                     const furigana = item.lastFurigana || item.firstFurigana || '';
                     if (!checkKanaRow(furigana, selectedKanaIndex)) return false;
                 }
 
-                // タグフィルター
                 if (selectedFilterTag !== 'ALL') {
                     const hasGroup = Array.isArray(item.tags) && item.tags.includes(selectedFilterTag);
                     const hasGift = Array.isArray(item.giftNotes) && item.giftNotes.includes(selectedFilterTag);
                     if (!hasGroup && !hasGift) return false;
                 }
 
-                // テキスト検索
                 if (!query) return true;
                 const matchName = `${item.lastName || ''}${item.firstName || ''}`.toLowerCase().includes(query);
                 const matchKana = `${item.lastFurigana || ''}${item.firstFurigana || ''}`.toLowerCase().includes(query);
@@ -1530,7 +1531,6 @@
                 return matchName || matchKana || matchAddr || matchCompany || matchNotes || matchJoint || matchTags || matchGifts;
             });
 
-            // ソート
             if (sortMode === 'kanaAsc') {
                 filtered.sort((a, b) => `${a.lastFurigana || ''}${a.firstFurigana || ''}`.localeCompare(`${b.lastFurigana || ''}${b.firstFurigana || ''}`, 'ja'));
             } else if (sortMode === 'kanaDesc') {
@@ -1561,7 +1561,7 @@
             });
 
             let html = `
-                <button onclick="filterByTag('ALL')" class="px-3 py-1 rounded-full whitespace-nowrap text-xs font-bold transition cursor-pointer ${selectedFilterTag === 'ALL' ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'}">
+                <button onclick="filterByTag('ALL')" class="px-2.5 sm:px-3 py-1 rounded-full whitespace-nowrap text-xs font-bold transition cursor-pointer shrink-0 ${selectedFilterTag === 'ALL' ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'}">
                     すべて (${contacts.length})
                 </button>
             `;
@@ -1570,7 +1570,7 @@
                 const count = contacts.filter(c => (c.tags || []).includes(tag) || (c.giftNotes || []).includes(tag)).length;
                 const isSelected = selectedFilterTag === tag;
                 html += `
-                    <button onclick="filterByTag('${tag}')" class="px-3 py-1 rounded-full whitespace-nowrap text-xs font-bold transition cursor-pointer ${isSelected ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'}">
+                    <button onclick="filterByTag('${tag}')" class="px-2.5 sm:px-3 py-1 rounded-full whitespace-nowrap text-xs font-bold transition cursor-pointer shrink-0 ${isSelected ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'}">
                         #${tag} (${count})
                     </button>
                 `;
@@ -1671,22 +1671,22 @@
                          ondragleave="handleDragLeave(event)"
                          ondrop="handleDrop(event, ${index})"
                          ondblclick="handleCardDblClick('${item.id}')"
-                         class="bg-slate-800 rounded-2xl p-4 border border-slate-700/80 shadow-lg hover:border-slate-600 transition flex flex-col justify-between relative group">
+                         class="bg-slate-800 rounded-2xl p-3.5 sm:p-4 border border-slate-700/80 shadow-lg hover:border-slate-600 transition flex flex-col justify-between relative group">
 
                         <div>
-                            <div class="flex justify-between items-start mb-2 pb-2 border-b border-slate-700/60">
-                                <div>
-                                    <div class="text-[11px] text-slate-400 font-bold tracking-widest">
+                            <div class="flex justify-between items-start mb-2 pb-2 border-b border-slate-700/60 gap-1">
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-[10px] sm:text-[11px] text-slate-400 font-bold tracking-widest truncate">
                                         ${item.lastFurigana || ''} ${item.firstFurigana || ''}
                                     </div>
-                                    <h3 class="text-xl font-black text-slate-100 flex items-center">
+                                    <h3 class="text-lg sm:text-xl font-black text-slate-100 flex items-center truncate">
                                         ${item.lastName || ''} ${item.firstName || ''}
-                                        <span class="text-xs text-slate-400 ml-1.5 font-normal">様</span>
+                                        <span class="text-xs text-slate-400 ml-1.5 font-normal shrink-0">様</span>
                                     </h3>
                                 </div>
 
-                                <div class="flex items-center space-x-1 bg-slate-900/90 p-1 rounded-xl border border-slate-700">
-                                    <span title="ドラッグで並び替え" class="p-1.5 text-slate-500 hover:text-slate-300 cursor-grab active:cursor-grabbing">
+                                <div class="flex items-center space-x-1 bg-slate-900/90 p-1 rounded-xl border border-slate-700 shrink-0">
+                                    <span title="ドラッグで並び替え" class="hidden sm:inline-block p-1 text-slate-500 hover:text-slate-300 cursor-grab">
                                         <i class="fa-solid fa-grip-vertical text-xs"></i>
                                     </span>
                                     <button onclick="moveContact(${index}, -1)" ${isFirst ? 'disabled class="p-1 text-slate-600 cursor-not-allowed"' : 'class="p-1 text-slate-400 hover:text-white cursor-pointer"'}>
@@ -1696,22 +1696,22 @@
                                         <i class="fa-solid fa-chevron-down text-xs"></i>
                                     </button>
                                     <div class="w-px h-3 bg-slate-700 my-auto"></div>
-                                    <button onclick="openPrintModal('${item.id}')" title="ハガキ宛名印刷" class="p-1.5 text-emerald-400 hover:text-emerald-300 cursor-pointer">
+                                    <button onclick="openPrintModal('${item.id}')" title="ハガキ宛名印刷" class="p-1 text-emerald-400 hover:text-emerald-300 cursor-pointer">
                                         <i class="fa-solid fa-print text-xs"></i>
                                     </button>
-                                    <button onclick="openZoomModal('${item.id}')" title="手書き特大表示" class="p-1.5 text-amber-400 hover:text-amber-300 cursor-pointer">
+                                    <button onclick="openZoomModal('${item.id}')" title="手書き特大表示" class="p-1 text-amber-400 hover:text-amber-300 cursor-pointer">
                                         <i class="fa-solid fa-magnifying-glass-plus text-xs"></i>
                                     </button>
-                                    <button onclick="openModal('${item.id}')" title="編集" class="p-1.5 text-blue-400 hover:text-blue-300 cursor-pointer">
+                                    <button onclick="openModal('${item.id}')" title="編集" class="p-1 text-blue-400 hover:text-blue-300 cursor-pointer">
                                         <i class="fa-solid fa-pen-to-square text-xs"></i>
                                     </button>
-                                    <button onclick="openDeleteModal('${item.id}')" title="削除" class="p-1.5 text-rose-400 hover:text-rose-300 cursor-pointer">
+                                    <button onclick="openDeleteModal('${item.id}')" title="削除" class="p-1 text-rose-400 hover:text-rose-300 cursor-pointer">
                                         <i class="fa-solid fa-trash-can text-xs"></i>
                                     </button>
                                 </div>
                             </div>
 
-                            <div class="bg-blue-950/60 p-3 rounded-xl border border-blue-900/80 mb-3 space-y-1">
+                            <div class="bg-blue-950/60 p-2.5 sm:p-3 rounded-xl border border-blue-900/80 mb-2.5 space-y-1">
                                 <div class="flex items-center justify-between">
                                     <span class="text-xs font-mono font-bold text-blue-300">〒 ${displayPostal}</span>
                                     <div class="flex space-x-1">
@@ -1725,7 +1725,7 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div class="text-sm font-bold text-slate-100 leading-snug tracking-wide">
+                                <div class="text-xs sm:text-sm font-bold text-slate-100 leading-snug tracking-wide break-all">
                                     ${item.address || ''}
                                 </div>
                             </div>
@@ -1753,18 +1753,18 @@
 
                 return `
                     <tr ondblclick="handleCardDblClick('${item.id}')" class="hover:bg-slate-700/40 transition">
-                        <td class="py-2 px-2 text-center align-middle border-r border-slate-700/50">
-                            <div class="grid grid-cols-2 gap-1 w-14 mx-auto">
-                                <button onclick="openZoomModal('${item.id}')" title="手書き特大表示" class="p-1.5 bg-slate-900 hover:bg-slate-700 text-amber-400 rounded border border-slate-700 cursor-pointer">
+                        <td class="py-2 px-1 text-center align-middle border-r border-slate-700/50">
+                            <div class="grid grid-cols-2 gap-1 w-12 mx-auto">
+                                <button onclick="openZoomModal('${item.id}')" title="特大表示" class="p-1 bg-slate-900 hover:bg-slate-700 text-amber-400 rounded border border-slate-700 cursor-pointer">
                                     <i class="fa-solid fa-magnifying-glass-plus text-xs"></i>
                                 </button>
-                                <button onclick="openPrintModal('${item.id}')" title="ハガキ印刷" class="p-1.5 bg-slate-900 hover:bg-slate-700 text-emerald-400 rounded border border-slate-700 cursor-pointer">
+                                <button onclick="openPrintModal('${item.id}')" title="ハガキ印刷" class="p-1 bg-slate-900 hover:bg-slate-700 text-emerald-400 rounded border border-slate-700 cursor-pointer">
                                     <i class="fa-solid fa-print text-xs"></i>
                                 </button>
-                                <button onclick="openModal('${item.id}')" title="編集" class="p-1.5 bg-slate-900 hover:bg-slate-700 text-blue-400 rounded border border-slate-700 cursor-pointer">
+                                <button onclick="openModal('${item.id}')" title="編集" class="p-1 bg-slate-900 hover:bg-slate-700 text-blue-400 rounded border border-slate-700 cursor-pointer">
                                     <i class="fa-solid fa-pen-to-square text-xs"></i>
                                 </button>
-                                <button onclick="openDeleteModal('${item.id}')" title="削除" class="p-1.5 bg-slate-900 hover:bg-slate-700 text-rose-400 rounded border border-slate-700 cursor-pointer">
+                                <button onclick="openDeleteModal('${item.id}')" title="削除" class="p-1 bg-slate-900 hover:bg-slate-700 text-rose-400 rounded border border-slate-700 cursor-pointer">
                                     <i class="fa-solid fa-trash-can text-xs"></i>
                                 </button>
                             </div>
@@ -1783,11 +1783,11 @@
 
                         <td class="py-2.5 px-3 align-middle">
                             <div class="flex flex-col sm:flex-row sm:items-baseline sm:space-x-2">
-                                <span class="text-xs text-slate-400 font-bold">${item.lastFurigana || ''} ${item.firstFurigana || ''}</span>
-                                <span class="text-base font-bold text-white">${item.lastName || ''} ${item.firstName || ''} 様</span>
+                                <span class="text-[11px] text-slate-400 font-bold">${item.lastFurigana || ''} ${item.firstFurigana || ''}</span>
+                                <span class="text-sm sm:text-base font-bold text-white">${item.lastName || ''} ${item.firstName || ''} 様</span>
                                 ${item.jointName ? `<span class="text-xs text-cyan-300 font-medium">(${item.jointName})</span>` : ''}
                             </div>
-                            <div class="text-xs font-bold text-slate-200 mt-0.5">
+                            <div class="text-xs font-bold text-slate-200 mt-0.5 break-all">
                                 <span class="text-blue-400 font-mono">〒${displayPostal}</span> ${item.address || ''}
                             </div>
                             <div class="flex flex-wrap items-center gap-1 mt-1">
@@ -1802,7 +1802,6 @@
             }).join('');
         }
 
-        /* ドラッグ＆ドロップ 並び替え処理 */
         function handleDragStart(e, index) {
             draggedIndex = index;
             e.target.classList.add('dragging');
@@ -1847,7 +1846,6 @@
             showToast('順序を移動しました', 'info');
         }
 
-        /* コピー＆共有処理 */
         function copyAddress(postal, address) {
             const textToCopy = `〒${postal || ''}\n${address || ''}`;
             copyTextToClipboard(textToCopy, '✓ 住所をコピーしました');
@@ -1887,7 +1885,6 @@
             document.body.removeChild(textArea);
         }
 
-        /* 特大表示モーダル制御 */
         function openZoomModal(id) {
             const item = contacts.find(c => c.id === id);
             if (!item) return;
@@ -1955,9 +1952,9 @@
                 const btn = document.getElementById(`zoomScale${s.toString().replace('.', '')}`);
                 if (btn) {
                     if (s === scale) {
-                        btn.className = 'px-2 py-1 rounded-lg transition font-bold bg-amber-500 text-slate-950';
+                        btn.className = 'px-1.5 sm:px-2 py-1 rounded-lg transition font-bold bg-amber-500 text-slate-950';
                     } else {
-                        btn.className = 'px-2 py-1 rounded-lg transition font-bold text-slate-300 hover:text-white';
+                        btn.className = 'px-1.5 sm:px-2 py-1 rounded-lg transition font-bold text-slate-300 hover:text-white';
                     }
                 }
             });
@@ -1978,7 +1975,6 @@
             if (printTargetId) openPrintModal(printTargetId);
         }
 
-        /* ハガキ宛名印刷モーダル */
         function openPrintModal(id) {
             const item = contacts.find(c => c.id === id);
             if (!item) return;
@@ -1994,7 +1990,6 @@
             document.getElementById('printModal').classList.add('hidden');
         }
 
-        /* 削除モーダル */
         function openDeleteModal(id) {
             deleteTargetId = id;
             document.getElementById('deleteModal').classList.remove('hidden');
@@ -2015,7 +2010,6 @@
             }
         }
 
-        /* データ管理 (JSON/CSV 保存・復元) - スマホ安定化対応 */
         function openDataModal() {
             document.getElementById('dataModal').classList.remove('hidden');
         }
@@ -2041,7 +2035,7 @@
 
         function exportCSV() {
             normalizeContactsData();
-            let csv = "\uFEFF"; // UTF-8 BOM
+            let csv = "\uFEFF";
             csv += "姓,名,セイ,メイ,郵便番号,住所,連名,電話番号,会社名,グループタグ,やり取り記録,自由メモ\n";
 
             contacts.forEach(c => {
@@ -2085,7 +2079,6 @@
                     const content = event.target.result;
                     let success = false;
 
-                    // 1. まずJSON形式としてのパースを試みる (拡張子が.txtや無拡張子の場合にも対応)
                     try {
                         const imported = JSON.parse(content);
                         const dataArray = Array.isArray(imported) ? imported : (imported.contacts || imported.data);
@@ -2099,10 +2092,9 @@
                             success = true;
                         }
                     } catch (jsonErr) {
-                        // JSONでない場合はCSVパースへスキップ
+                        // スキップ
                     }
 
-                    // 2. JSONパースで復元できなかった場合、CSVパースを試行
                     if (!success) {
                         const csvSuccess = parseCSVAndImport(content);
                         if (!csvSuccess) {
@@ -2113,7 +2105,7 @@
                     console.error(err);
                     showToast('ファイルの読み込みに失敗しました', 'error');
                 } finally {
-                    e.target.value = ''; // 次回同じファイルを選択してもonchangeが発生するようにリセット
+                    e.target.value = '';
                 }
             };
 
@@ -2123,9 +2115,7 @@
         function parseCSVAndImport(csvText) {
             if (!csvText || typeof csvText !== 'string') return false;
             const lines = csvText.split(/\r\n|\n/).filter(line => line.trim());
-            if (lines.length <= 1) {
-                return false;
-            }
+            if (lines.length <= 1) return false;
 
             const newContacts = [];
             for (let i = 1; i < lines.length; i++) {
@@ -2186,7 +2176,6 @@
             return result;
         }
 
-        /* PWA 関連 */
         function initPWA() {
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
@@ -2217,7 +2206,6 @@
             }
         }
 
-        /* トースト通知機能 */
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             if (!container) return;
@@ -2234,8 +2222,8 @@
                 icon = '<i class="fa-solid fa-circle-exclamation text-rose-400 mr-2"></i>';
             }
 
-            toast.className = `${bgClass} border px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold flex items-center transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto`;
-            toast.innerHTML = `${icon}<span>${message}</span>`;
+            toast.className = `${bgClass} border px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl shadow-2xl text-xs font-bold flex items-center transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto max-w-full`;
+            toast.innerHTML = `${icon}<span class="truncate">${message}</span>`;
 
             container.appendChild(toast);
 
