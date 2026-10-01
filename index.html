@@ -128,11 +128,6 @@
             border-color: #334155 !important;
         }
 
-        /* 拡大モーダルの倍率連動用ベーススケール指定（CSS変数） */
-        :root {
-            --zoom-scale: 1;
-        }
-
         /* 印刷スタイル定義 */
         @media print {
             body * {
@@ -406,36 +401,27 @@
         </div>
     </div>
 
-    <!-- 特大表示モーダル (レイアウト崩れ・ボタン非ハイライト問題の修正版) -->
+    <!-- 特大表示モーダル (倍率ボタン削除・スッキリ化版) -->
     <div id="zoomModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-2">
         <div class="bg-slate-900 rounded-2xl max-w-2xl w-full p-3 sm:p-5 shadow-2xl border-2 border-amber-500/60 flex flex-col max-h-[92dvh] text-slate-100 relative my-auto">
             
-            <!-- 固定ヘッダー（ボタン類・閉じるボタンを常時可視化・保護） -->
+            <!-- 固定ヘッダー（シンプル化） -->
             <div class="flex justify-between items-center mb-2 pb-1.5 border-b border-slate-800 gap-1.5 shrink-0">
-                <div class="flex items-center space-x-1.5 min-w-0 shrink-0">
+                <div class="flex items-center space-x-1.5 min-w-0">
                     <i class="fa-solid fa-glasses text-amber-400 text-sm sm:text-base"></i>
                     <h3 class="text-xs sm:text-base font-bold text-white whitespace-nowrap">拡大参照</h3>
                 </div>
-                <!-- 倍率選択コントロール -->
-                <div class="flex items-center space-x-1 shrink-0">
-                    <div class="flex bg-slate-800 p-0.5 rounded-lg border border-slate-700 text-[10px]">
-                        <button type="button" onclick="setZoomScale(1)" id="zoomBtn100" class="px-1.5 py-0.5 rounded transition font-bold bg-amber-500 text-slate-950 shadow">100%</button>
-                        <button type="button" onclick="setZoomScale(1.25)" id="zoomBtn125" class="px-1.5 py-0.5 rounded transition font-bold text-slate-300 hover:text-white">125%</button>
-                        <button type="button" onclick="setZoomScale(1.5)" id="zoomBtn150" class="px-1.5 py-0.5 rounded transition font-bold text-slate-300 hover:text-white">150%</button>
-                        <button type="button" onclick="setZoomScale(1.8)" id="zoomBtn180" class="px-1.5 py-0.5 rounded transition font-bold text-slate-300 hover:text-white">180%</button>
-                    </div>
-                    <button type="button" onclick="closeZoomModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer" title="閉じる">
-                        <i class="fa-solid fa-xmark text-base"></i>
-                    </button>
-                </div>
+                <button type="button" onclick="closeZoomModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer" title="閉じる">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
             </div>
 
-            <!-- スクロール可変コンテンツエリア（縦スクロールのみ許可・横スクロール防止） -->
+            <!-- スクロールエリア（縦スクロールのみ・手書き参照用大文字表示） -->
             <div id="zoomScrollArea" class="overflow-y-auto overflow-x-hidden flex-1 min-h-0 pr-1 space-y-3">
                 
                 <!-- お名前エリア -->
-                <div class="bg-slate-950 p-2.5 sm:p-4 rounded-xl border border-slate-800">
-                    <div id="zoomFurigana" class="text-amber-400/90 text-xs sm:text-sm font-bold tracking-widest break-all">ヤマダ タロウ</div>
+                <div class="bg-slate-950 p-3 sm:p-4 rounded-xl border border-slate-800">
+                    <div id="zoomFurigana" class="text-amber-400/90 text-sm sm:text-base font-bold tracking-widest break-all mb-0.5">ヤマダ タロウ</div>
                     <div class="flex items-baseline space-x-2 flex-wrap">
                         <div id="zoomName" class="text-2xl sm:text-3xl font-black text-white tracking-wider break-all">山田 太郎</div>
                         <span class="text-base font-bold text-slate-400 shrink-0">様</span>
@@ -446,46 +432,46 @@
                 </div>
 
                 <!-- 住所エリア -->
-                <div class="bg-amber-950/40 p-2.5 sm:p-4 rounded-xl border-2 border-amber-500/50 space-y-1.5">
+                <div class="bg-amber-950/40 p-3 sm:p-4 rounded-xl border-2 border-amber-500/50 space-y-1.5">
                     <div class="flex items-center justify-between gap-1">
-                        <div class="text-amber-400 font-bold text-[10px] uppercase tracking-wider">
+                        <div class="text-amber-400 font-bold text-xs uppercase tracking-wider">
                             <i class="fa-solid fa-location-dot mr-1"></i>郵便番号・住所
                         </div>
                         <div class="flex items-center space-x-1 shrink-0">
-                            <button id="zoomCopyBtn" type="button" onclick="copyAddressFromZoom()" title="コピー" class="p-1 bg-amber-500 text-slate-950 font-bold text-[10px] rounded transition cursor-pointer shadow flex items-center space-x-0.5">
+                            <button id="zoomCopyBtn" type="button" onclick="copyAddressFromZoom()" title="コピー" class="p-1 bg-amber-500 text-slate-950 font-bold text-xs rounded transition cursor-pointer shadow flex items-center space-x-0.5">
                                 <i class="fa-solid fa-copy"></i><span>コピー</span>
                             </button>
-                            <button id="zoomShareBtn" type="button" onclick="shareContactTextFromZoom()" title="一括" class="p-1 bg-blue-600 text-white font-bold text-[10px] rounded transition cursor-pointer shadow flex items-center space-x-0.5">
+                            <button id="zoomShareBtn" type="button" onclick="shareContactTextFromZoom()" title="一括" class="p-1 bg-blue-600 text-white font-bold text-xs rounded transition cursor-pointer shadow flex items-center space-x-0.5">
                                 <i class="fa-solid fa-share-nodes"></i><span>一括</span>
                             </button>
                         </div>
                     </div>
-                    <div id="zoomPostal" class="text-base sm:text-xl font-mono font-bold text-amber-200">〒 100-0001</div>
-                    <div id="zoomAddress" class="text-lg sm:text-2xl font-black text-white leading-snug tracking-wide border-t border-amber-500/30 pt-1.5 break-all">
+                    <div id="zoomPostal" class="text-lg sm:text-xl font-mono font-bold text-amber-200">〒 100-0001</div>
+                    <div id="zoomAddress" class="text-xl sm:text-2xl font-black text-white leading-snug tracking-wide border-t border-amber-500/30 pt-1.5 break-all">
                         東京都千代田区千代田1-1
                     </div>
                 </div>
 
                 <!-- 詳細情報 -->
                 <div id="zoomDetails" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    <div id="zoomPhoneBox" class="bg-slate-950 p-2 rounded-lg border border-slate-800 hidden">
-                        <span class="text-slate-400 font-bold block text-[10px]">電話番号</span>
-                        <span id="zoomPhone" class="text-xs sm:text-sm font-bold text-emerald-400 break-all"></span>
+                    <div id="zoomPhoneBox" class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 hidden">
+                        <span class="text-slate-400 font-bold block text-xs">電話番号</span>
+                        <span id="zoomPhone" class="text-sm font-bold text-emerald-400 break-all"></span>
                     </div>
-                    <div id="zoomCompanyBox" class="bg-slate-950 p-2 rounded-lg border border-slate-800 hidden">
-                        <span class="text-slate-400 font-bold block text-[10px]">会社名 / 所属</span>
-                        <span id="zoomCompany" class="text-xs sm:text-sm font-bold text-purple-300 break-all"></span>
+                    <div id="zoomCompanyBox" class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 hidden">
+                        <span class="text-slate-400 font-bold block text-xs">会社名 / 所属</span>
+                        <span id="zoomCompany" class="text-sm font-bold text-purple-300 break-all"></span>
                     </div>
                 </div>
 
                 <!-- メモ -->
-                <div id="zoomNotesBox" class="bg-slate-950 p-2 rounded-lg border border-slate-800 hidden text-xs">
-                    <span class="text-slate-400 font-bold block text-[10px]">メモ</span>
-                    <p id="zoomNotes" class="text-slate-200 whitespace-pre-wrap text-[11px] break-all"></p>
+                <div id="zoomNotesBox" class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 hidden text-xs">
+                    <span class="text-slate-400 font-bold block text-xs">メモ</span>
+                    <p id="zoomNotes" class="text-slate-200 whitespace-pre-wrap text-xs sm:text-sm break-all mt-0.5"></p>
                 </div>
             </div>
 
-            <!-- 固定フッター（操作ボタン） -->
+            <!-- 固定フッター -->
             <div class="mt-2 pt-2 border-t border-slate-800 flex justify-between items-center gap-2 shrink-0">
                 <button id="zoomPrintBtn" type="button" onclick="openPrintModalFromZoom()" class="p-1.5 bg-emerald-600 text-white font-bold text-xs rounded-lg cursor-pointer flex items-center space-x-1 shrink-0 shadow" title="ハガキ印刷">
                     <i class="fa-solid fa-print"></i><span>印刷</span>
@@ -668,7 +654,7 @@
                 <button onclick="confirmDelete()" class="px-3 py-1 bg-rose-600 text-white rounded font-bold shadow">削除</button>
             </div>
         </div>
-    </div
+    </div>
 
     <!-- スマホ専用ボトムナビ（アイコンのみ） -->
     <nav class="sm:hidden fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur-md border-t border-slate-700/80 z-30 px-1 py-1">
@@ -706,7 +692,6 @@
         let doubleClickBehavior = 'zoom';
         let currentAppTheme = 'dark';
         let draggedIndex = null;
-        let currentZoomScale = 1;
         let deferredPrompt = null;
         let printTargetId = null;
 
@@ -1540,35 +1525,11 @@
                 notesBox.classList.remove('hidden');
             } else notesBox.classList.add('hidden');
 
-            setZoomScale(1);
             document.getElementById('zoomModal').classList.remove('hidden');
         }
 
         function closeZoomModal() {
             document.getElementById('zoomModal').classList.add('hidden');
-        }
-
-        /* 拡大率の切り替え（フォントサイズ連動で横スクロールを防止＋ボタンのハイライト連動） */
-        function setZoomScale(scale) {
-            currentZoomScale = scale;
-            const scrollArea = document.getElementById('zoomScrollArea');
-            if (scrollArea) {
-                // scaleによる枠拡大ではなく、フォントサイズ倍率変更（rem単位）で横スクロールを防ぐ
-                scrollArea.style.fontSize = `${scale * 100}%`;
-            }
-
-            const scales = [1, 1.25, 1.5, 1.8];
-            scales.forEach(s => {
-                const btnId = `zoomBtn${s.toString().replace('.', '')}`;
-                const btn = document.getElementById(btnId);
-                if (btn) {
-                    if (s === scale) {
-                        btn.className = 'px-1.5 py-0.5 rounded transition font-bold bg-amber-500 text-slate-950 shadow';
-                    } else {
-                        btn.className = 'px-1.5 py-0.5 rounded transition font-bold text-slate-300 hover:text-white';
-                    }
-                }
-            });
         }
 
         function copyAddressFromZoom() {
