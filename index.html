@@ -29,20 +29,33 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@600;800&display=swap');
         
-        html {
+        /* スマホ等での勝手な文字自動拡大（Font Boosting）を防止 */
+        html, body {
             -webkit-text-size-adjust: 100%;
             text-size-adjust: 100%;
         }
-        
+
         body {
             font-family: 'Noto Sans JP', sans-serif;
             transition: background-color 0.3s ease, color 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
         }
+
         .font-vertical {
             writing-mode: vertical-rl;
             text-orientation: upright;
             font-family: 'Shippori Mincho', 'Noto Serif JP', serif;
         }
+
+        /* スクロールバー非表示（モバイル快適化） */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -52,13 +65,24 @@
         }
         ::-webkit-scrollbar-thumb {
             background: rgba(156, 163, 175, 0.5);
-            border-radius: 3px;
+            border-radius: 4px;
         }
         .dark ::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.05);
         }
         .dark ::-webkit-scrollbar-thumb {
             background: rgba(75, 85, 99, 0.5);
+        }
+
+        /* ドラッグ中のスタイル */
+        .dragging {
+            opacity: 0.4;
+            transform: scale(0.98);
+            border: 2px dashed #3b82f6 !important;
+        }
+        .drag-over {
+            border: 2px solid #60a5fa !important;
+            background-color: rgba(30, 58, 138, 0.3) !important;
         }
 
         /* ライトモード用包括的スタイルオーバーライド */
@@ -131,7 +155,7 @@
             border-color: #e2e8f0 !important;
         }
         html.dark .sticky-header-bg {
-            background-color: rgba(15, 23, 42, 0.95) !important;
+            background-color: rgba(15, 23, 42, 0.92) !important;
             border-color: #334155 !important;
         }
 
@@ -155,43 +179,49 @@
         }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen pb-28 sm:pb-12 selection:bg-blue-500 selection:text-white">
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-24 sm:pb-12 selection:bg-blue-500 selection:text-white text-xs sm:text-sm">
 
     <!-- ヘッダー -->
-    <header class="bg-slate-800/90 backdrop-blur-md border-b border-slate-700/80 sticky top-0 z-30 px-3 sm:px-4 py-2.5 shadow-md">
+    <header class="bg-slate-800/90 backdrop-blur-md border-b border-slate-700/80 sticky top-0 z-30 px-3 sm:px-4 py-2 shadow-md">
         <div class="max-w-6xl mx-auto flex items-center justify-between">
             <div class="flex items-center space-x-2">
-                <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-blue-500/30">
+                <div class="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-xs sm:text-lg shadow-lg shadow-blue-500/30 shrink-0">
                     <i class="fa-solid fa-address-book"></i>
                 </div>
                 <div>
-                    <h1 class="text-sm sm:text-base font-bold text-slate-100 leading-tight">スマート住所録</h1>
-                    <p class="text-[9px] sm:text-[10px] text-slate-400">参照・拡大・印刷対応</p>
+                    <h1 class="text-xs sm:text-base font-bold text-slate-100 leading-tight">スマート住所録</h1>
+                    <p class="text-[9px] sm:text-[10px] text-slate-400">手書き参照・拡大・印刷対応</p>
                 </div>
             </div>
 
             <!-- ヘッダーアクション (PC・タブレット表示、スマホ時は下部ナビに統合) -->
             <div class="hidden sm:flex items-center space-x-2">
                 <!-- テーマ迅速切り替えボタン -->
-                <button onclick="toggleThemeQuick()" title="テーマ切替" class="px-2 py-1 bg-slate-700/80 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-medium transition cursor-pointer border border-slate-600 flex items-center space-x-1">
+                <button onclick="toggleThemeQuick()" title="テーマ切替" class="px-2.5 py-1.5 bg-slate-700/80 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-medium transition cursor-pointer border border-slate-600 flex items-center space-x-1">
                     <i id="themeToggleIcon" class="fa-solid fa-sun text-amber-400"></i>
                     <span id="themeToggleText">ライト</span>
                 </button>
 
                 <!-- 表示設定 -->
-                <button onclick="openSettingsModal()" class="px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-medium transition cursor-pointer border border-slate-600 flex items-center space-x-1 shadow-sm">
+                <button onclick="openSettingsModal()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-medium transition cursor-pointer border border-slate-600 flex items-center space-x-1.5 shadow-sm">
                     <i class="fa-solid fa-gear text-amber-400"></i>
                     <span>表示設定</span>
                 </button>
 
                 <!-- データ管理/バックアップ -->
-                <button onclick="openDataModal()" class="px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-medium transition cursor-pointer border border-slate-600 flex items-center space-x-1 shadow-sm">
+                <button onclick="openDataModal()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-medium transition cursor-pointer border border-slate-600 flex items-center space-x-1.5 shadow-sm">
                     <i class="fa-solid fa-database text-cyan-400"></i>
                     <span>保存・復元</span>
                 </button>
 
+                <!-- アプリ追加 (PWA) -->
+                <button onclick="openPwaModal()" class="px-3 py-1.5 bg-purple-950/80 hover:bg-purple-900 border border-purple-700/60 text-purple-200 rounded-lg text-xs font-medium transition cursor-pointer flex items-center space-x-1.5 shadow-sm">
+                    <i class="fa-solid fa-mobile-screen-button text-purple-400"></i>
+                    <span>アプリ化</span>
+                </button>
+
                 <!-- 新規登録 -->
-                <button onclick="openModal()" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs transition cursor-pointer shadow-md shadow-blue-600/30 flex items-center space-x-1">
+                <button onclick="openModal()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs transition cursor-pointer shadow-lg shadow-blue-600/30 flex items-center space-x-1.5">
                     <i class="fa-solid fa-user-plus"></i>
                     <span>新規登録</span>
                 </button>
@@ -200,77 +230,77 @@
     </header>
 
     <!-- 検索・フィルター・コントロールエリア (Sticky) -->
-    <section class="sticky top-[49px] sm:top-[53px] z-20 sticky-header-bg border-b border-slate-800 shadow-md backdrop-blur-md px-3 py-2">
-        <div class="max-w-6xl mx-auto space-y-1.5">
-            <div class="flex flex-col sm:flex-row gap-1.5">
+    <section class="sticky top-[45px] sm:top-[57px] z-20 sticky-header-bg border-b border-slate-800 shadow-lg backdrop-blur-md px-3 sm:px-4 py-2">
+        <div class="max-w-6xl mx-auto space-y-1.5 sm:space-y-2">
+            <div class="flex flex-col sm:flex-row gap-1.5 sm:gap-2">
                 <!-- 検索窓 -->
-                <div class="relative flex-1">
-                    <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input type="text" id="searchInput" oninput="applyFilters()" placeholder="名前・住所・メモで検索..."
-                           class="w-full pl-8 pr-7 py-1.5 bg-slate-800/90 border border-slate-700/80 rounded-lg text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                    <button onclick="clearSearch()" id="clearSearchBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 text-xs">
+                <div class="relative flex-1 w-full">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="searchInput" oninput="applyFilters()" placeholder="名前・住所・会社・メモで検索..."
+                           class="w-full pl-8 sm:pl-9 pr-8 py-1.5 bg-slate-800/90 border border-slate-700/80 rounded-xl text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    <button onclick="clearSearch()" id="clearSearchBtn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200">
                         <i class="fa-solid fa-circle-xmark"></i>
                     </button>
                 </div>
 
-                <div class="flex items-center justify-between sm:justify-start space-x-2">
+                <div class="flex items-center space-x-2 justify-between sm:justify-end w-full sm:w-auto">
                     <!-- 並び替え -->
-                    <select id="sortSelect" onchange="applyFilters()" class="bg-slate-800/90 border border-slate-700/80 text-[11px] sm:text-xs text-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-500 cursor-pointer">
-                        <option value="custom">任意パターン順（登録順）</option>
+                    <select id="sortSelect" onchange="applyFilters()" class="flex-1 sm:flex-initial bg-slate-800/90 border border-slate-700/80 text-xs text-slate-200 rounded-xl px-2 py-1.5 focus:outline-none focus:border-blue-500 cursor-pointer">
+                        <option value="custom">登録順（標準）</option>
                         <option value="kanaAsc">五十音順 (ア→ン)</option>
                         <option value="kanaDesc">五十音順 (ン→ア)</option>
                     </select>
 
                     <!-- 表示モード切替（カード / 一覧） -->
-                    <div class="flex bg-slate-800 p-0.5 rounded-lg border border-slate-700/80">
-                        <button id="viewCardBtn" onclick="switchViewMode('card')" class="px-2 py-1 text-[11px] rounded transition font-medium cursor-pointer flex items-center space-x-1 bg-blue-600 text-white">
+                    <div class="flex bg-slate-800 p-0.5 rounded-xl border border-slate-700/80 shrink-0">
+                        <button id="viewCardBtn" onclick="switchViewMode('card')" class="px-2 py-1 text-xs rounded-lg transition font-medium cursor-pointer flex items-center space-x-1 bg-blue-600 text-white">
                             <i class="fa-solid fa-address-card"></i>
-                            <span class="hidden sm:inline">カード</span>
+                            <span class="hidden md:inline">カード</span>
                         </button>
-                        <button id="viewTableBtn" onclick="switchViewMode('table')" class="px-2 py-1 text-[11px] rounded transition font-medium cursor-pointer flex items-center space-x-1 text-slate-400 hover:text-slate-200">
+                        <button id="viewTableBtn" onclick="switchViewMode('table')" class="px-2 py-1 text-xs rounded-lg transition font-medium cursor-pointer flex items-center space-x-1 text-slate-400 hover:text-slate-200">
                             <i class="fa-solid fa-list"></i>
-                            <span class="hidden sm:inline">一覧</span>
+                            <span class="hidden md:inline">一覧</span>
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- 50音クイックインデックスバー (コンパクト化) -->
-            <div id="kanaIndexContainer" class="flex items-center space-x-1 overflow-x-auto text-[10px] sm:text-[11px] no-scrollbar border-t border-b border-slate-700/40 py-1">
+            <!-- 50音クイックインデックスバー -->
+            <div id="kanaIndexContainer" class="flex items-center space-x-1 overflow-x-auto pb-1 text-[11px] no-scrollbar border-t border-b border-slate-700/50 py-1 touch-pan-x">
                 <!-- JSで動的生成 -->
             </div>
 
-            <!-- タグフィルター (コンパクト化) -->
-            <div id="tagFilterContainer" class="flex items-center space-x-1 overflow-x-auto text-[10px] sm:text-xs no-scrollbar">
+            <!-- タグフィルター (横スクロール) -->
+            <div id="tagFilterContainer" class="flex items-center space-x-1 overflow-x-auto pb-0.5 text-xs no-scrollbar touch-pan-x">
                 <!-- JSで動的生成 -->
             </div>
         </div>
     </section>
 
     <!-- メインコンテンツ -->
-    <main class="max-w-6xl mx-auto px-3 sm:px-4 pt-3">
+    <main class="max-w-6xl mx-auto px-3 sm:px-4 pt-2 sm:pt-4">
         <!-- ダブルクリック動作ガイド & 件数表示 -->
-        <div class="flex items-center justify-between mb-2 text-[11px] text-slate-400 px-0.5">
-            <span id="dblClickGuideText" class="flex items-center">
-                <i class="fa-solid fa-hand-pointer mr-1 text-blue-400"></i>
-                カードをダブルクリックで特大表示
+        <div class="flex items-center justify-between mb-2 sm:mb-3 text-[11px] sm:text-xs text-slate-400 px-0.5">
+            <span id="dblClickGuideText" class="flex items-center truncate">
+                <i class="fa-solid fa-hand-pointer mr-1.5 text-blue-400"></i>
+                タップ・ダブルクリックで参照
             </span>
-            <span id="contactCount" class="font-medium text-slate-300">0 件</span>
+            <span id="contactCount" class="font-medium text-slate-300 shrink-0 ml-2">0 件</span>
         </div>
 
         <!-- 連絡先リスト（カード表示ビュー） -->
-        <div id="cardViewContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3">
+        <div id="cardViewContainer" class="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-4">
             <!-- JSで動的生成 -->
         </div>
 
         <!-- 連絡先リスト（テーブル一覧表示ビュー） -->
-        <div id="tableViewContainer" class="hidden overflow-x-auto bg-slate-800 rounded-xl border border-slate-700/80 shadow-md">
-            <table class="w-full text-left text-xs text-slate-300">
+        <div id="tableViewContainer" class="hidden overflow-x-auto bg-slate-800 rounded-2xl border border-slate-700/80 shadow-xl">
+            <table class="w-full text-left text-xs text-slate-300 min-w-[480px]">
                 <thead class="bg-slate-900/90 text-slate-400 uppercase font-bold border-b border-slate-700">
                     <tr>
                         <th scope="col" class="py-2 px-2 w-16 text-center">操作</th>
-                        <th scope="col" class="py-2 px-2 w-12 text-center">順序</th>
-                        <th scope="col" class="py-2 px-3">お名前 / 住所 / 主要連絡先</th>
+                        <th scope="col" class="py-2 px-1 w-10 text-center">順序</th>
+                        <th scope="col" class="py-2 px-2">お名前 / 住所 / 主要連絡先</th>
                     </tr>
                 </thead>
                 <tbody id="tableTbody" class="divide-y divide-slate-700/50">
@@ -280,62 +310,67 @@
         </div>
 
         <!-- 空の状態メッセージ -->
-        <div id="emptyState" class="hidden text-center py-12 px-4">
-            <div class="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center mx-auto mb-3 border border-slate-700 text-slate-500">
-                <i class="fa-solid fa-address-book text-xl"></i>
+        <div id="emptyState" class="hidden text-center py-10 sm:py-16 px-4">
+            <div class="w-12 h-12 sm:w-16 sm:h-16 bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-slate-700 text-slate-500">
+                <i class="fa-solid fa-address-book text-xl sm:text-2xl"></i>
             </div>
-            <h3 class="text-xs font-bold text-slate-300 mb-1">連絡先が見つかりません</h3>
-            <p class="text-[11px] text-slate-400 mb-3">新規登録するか、検索条件・フィルターを解除してください。</p>
-            <button onclick="openModal()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition">
+            <h3 class="text-xs sm:text-sm font-bold text-slate-300 mb-1">連絡先が見つかりません</h3>
+            <p class="text-[11px] sm:text-xs text-slate-400 mb-4">新規登録するか、検索条件・タグ指定・50音フィルターを解除してください。</p>
+            <button onclick="openModal()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition">
                 <i class="fa-solid fa-plus mr-1"></i>新規登録する
             </button>
         </div>
     </main>
 
     <!-- モーダル: 登録・編集 -->
-    <div id="contactModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3">
-        <div class="bg-slate-800 rounded-xl max-w-lg w-full p-4 shadow-2xl border border-slate-700 max-h-[90vh] flex flex-col text-xs">
-            <div class="flex justify-between items-center mb-2 pb-2 border-b border-slate-700 shrink-0">
-                <h3 id="modalTitle" class="text-sm font-bold text-slate-100 flex items-center">
-                    <i class="fa-solid fa-user-pen mr-2 text-blue-400"></i>連絡先の登録
+    <div id="contactModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-2 sm:p-4">
+        <div class="bg-slate-800 rounded-2xl max-w-lg w-full p-3 sm:p-5 shadow-2xl border border-slate-700 max-h-[92dvh] flex flex-col my-auto">
+            <div class="flex justify-between items-center mb-2 pb-1.5 border-b border-slate-700 shrink-0">
+                <h3 id="modalTitle" class="text-xs sm:text-base font-bold text-slate-100 flex items-center">
+                    <i class="fa-solid fa-user-pen mr-1.5 text-blue-400"></i>連絡先の登録
                 </h3>
                 <button onclick="closeModal()" class="text-slate-400 hover:text-slate-200 cursor-pointer p-1">
-                    <i class="fa-solid fa-xmark text-base"></i>
+                    <i class="fa-solid fa-xmark text-base sm:text-lg"></i>
                 </button>
             </div>
 
-            <form id="contactForm" onsubmit="saveContact(event)" class="flex flex-col flex-1 overflow-hidden">
+            <form id="contactForm" onsubmit="saveContact(event)" class="flex flex-col flex-1 overflow-hidden min-h-0">
                 <input type="hidden" id="contactId">
 
-                <!-- 1. 固定表示エリア -->
-                <div id="fixedZoneContainer" class="space-y-2 bg-blue-950/40 p-2.5 rounded-lg border border-blue-900/60 shrink-0 mb-2">
+                <!-- 1. 固定表示エリア (常にフォーム最上部に固定) -->
+                <div id="fixedZoneContainer" class="space-y-2 bg-blue-950/40 p-2 sm:p-3 rounded-xl border border-blue-900/60 shrink-0 mb-2">
                     <div class="text-[10px] font-bold text-blue-400 flex items-center mb-0.5">
                         <i class="fa-solid fa-thumbtack mr-1"></i>固定表示エリア（必須項目）
                     </div>
+                    <!-- JSで設定順に従ってフィールドを動的挿入 -->
                 </div>
 
-                <!-- 2. スクロール表示エリア -->
-                <div class="overflow-y-auto pr-1 space-y-2.5 flex-1">
-                    <div id="scrollZoneContainer" class="space-y-2.5"></div>
+                <!-- 2. スクロール表示エリア (中身のみスクロール可能) -->
+                <div class="overflow-y-auto pr-1 space-y-2 flex-1 min-h-0">
+                    <div id="scrollZoneContainer" class="space-y-2">
+                        <!-- JSで設定順に従ってフィールドを動的挿入 -->
+                    </div>
 
-                    <!-- 3. 詳細表示エリア -->
-                    <div id="foldZoneWrapper" class="pt-2 border-t border-slate-700/60">
-                        <button type="button" onclick="toggleAccordion()" class="w-full py-1.5 px-2.5 bg-slate-900/80 hover:bg-slate-900 text-slate-300 rounded-lg border border-slate-700 flex justify-between items-center transition font-medium text-xs">
-                            <span class="flex items-center">
+                    <!-- 3. 詳細表示エリア (アコーディオンボタン) -->
+                    <div id="foldZoneWrapper" class="pt-1.5 border-t border-slate-700/60">
+                        <button type="button" onclick="toggleAccordion()" class="w-full py-1.5 px-2.5 bg-slate-900/80 hover:bg-slate-900 text-slate-300 rounded-xl border border-slate-700 flex justify-between items-center transition font-medium text-xs">
+                            <span class="flex items-center text-[11px] sm:text-xs">
                                 <i class="fa-solid fa-sliders text-indigo-400 mr-1.5"></i>詳細項目を入力 (折りたたみ)
                             </span>
                             <i id="accordionIcon" class="fa-solid fa-chevron-down transition-transform duration-200 text-xs text-slate-400"></i>
                         </button>
 
-                        <div id="foldZoneContainer" class="hidden space-y-2.5 pt-2 text-xs"></div>
+                        <div id="foldZoneContainer" class="hidden space-y-2 pt-2 text-xs">
+                            <!-- JSで設定順に従ってフィールドを動的挿入 -->
+                        </div>
                     </div>
                 </div>
 
-                <div class="pt-3 flex justify-end space-x-2 border-t border-slate-700/80 shrink-0 mt-2 text-xs">
-                    <button type="button" onclick="closeModal()" class="px-3.5 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg font-bold cursor-pointer">
+                <div class="pt-2.5 flex justify-end space-x-2 border-t border-slate-700/80 shrink-0 mt-2 text-xs">
+                    <button type="button" onclick="closeModal()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl font-bold cursor-pointer">
                         キャンセル
                     </button>
-                    <button type="submit" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold cursor-pointer shadow-md">
+                    <button type="submit" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold cursor-pointer shadow-lg shadow-blue-600/30">
                         保存する
                     </button>
                 </div>
@@ -348,225 +383,414 @@
         <!-- お名前（姓・名） -->
         <div id="fieldName" class="grid grid-cols-2 gap-2 text-xs">
             <div>
-                <label class="block font-bold text-slate-300 mb-1" id="lblLastName">姓 <span class="text-rose-400">*</span></label>
-                <input type="text" id="inputLastName" placeholder="山田" class="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500">
+                <label class="block font-bold text-slate-300 mb-0.5 text-[11px]" id="lblLastName">姓 <span class="text-rose-400">*</span></label>
+                <input type="text" id="inputLastName" placeholder="山田" class="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-xs">
             </div>
             <div>
-                <label class="block font-bold text-slate-300 mb-1" id="lblFirstName">名 <span class="text-rose-400">*</span></label>
-                <input type="text" id="inputFirstName" placeholder="太郎" class="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500">
+                <label class="block font-bold text-slate-300 mb-0.5 text-[11px]" id="lblFirstName">名 <span class="text-rose-400">*</span></label>
+                <input type="text" id="inputFirstName" placeholder="太郎" class="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-xs">
             </div>
         </div>
 
         <!-- フリガナ（セイ・メイ） -->
         <div id="fieldFurigana" class="grid grid-cols-2 gap-2 text-xs">
             <div>
-                <label class="block font-bold text-slate-300 mb-1" id="lblLastFurigana">セイ</label>
-                <input type="text" id="inputLastFurigana" placeholder="ヤマダ" class="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500">
+                <label class="block font-bold text-slate-300 mb-0.5 text-[11px]" id="lblLastFurigana">セイ</label>
+                <input type="text" id="inputLastFurigana" placeholder="ヤマダ" class="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-xs">
             </div>
             <div>
-                <label class="block font-bold text-slate-300 mb-1" id="lblFirstFurigana">メイ</label>
-                <input type="text" id="inputFirstFurigana" placeholder="タロウ" class="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500">
+                <label class="block font-bold text-slate-300 mb-0.5 text-[11px]" id="lblFirstFurigana">メイ</label>
+                <input type="text" id="inputFirstFurigana" placeholder="タロウ" class="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-xs">
             </div>
         </div>
 
         <!-- 郵便番号・住所 -->
         <div id="fieldAddress" class="space-y-1.5 text-xs">
             <div>
-                <label class="block font-bold text-slate-300 mb-1" id="lblPostal">郵便番号 <span class="text-rose-400">*</span></label>
+                <label class="block font-bold text-slate-300 mb-0.5 text-[11px]" id="lblPostal">郵便番号 <span class="text-rose-400">*</span></label>
                 <div class="flex space-x-1.5">
-                    <input type="text" id="inputPostal" placeholder="100-0001" class="flex-1 p-1.5 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500">
-                    <button type="button" onclick="searchAddress()" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg whitespace-nowrap cursor-pointer text-xs">
-                        住所検索
+                    <input type="text" id="inputPostal" placeholder="100-0001" class="flex-1 min-w-0 p-1.5 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-xs">
+                    <button type="button" onclick="searchAddress()" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl whitespace-nowrap cursor-pointer shrink-0 text-xs">
+                        <i class="fa-solid fa-magnifying-glass mr-1"></i>検索
                     </button>
                 </div>
                 <span id="zipStatus" class="text-[10px] text-slate-400 mt-0.5 block"></span>
             </div>
             <div>
-                <label class="block font-bold text-slate-300 mb-1" id="lblAddress">住所 <span class="text-rose-400">*</span></label>
-                <textarea id="inputAddress" rows="2" placeholder="東京都千代田区千代田1-1" class="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500 resize-none"></textarea>
+                <label class="block font-bold text-slate-300 mb-0.5 text-[11px]" id="lblAddress">住所 <span class="text-rose-400">*</span></label>
+                <textarea id="inputAddress" rows="2" placeholder="東京都千代田区千代田1-1" class="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 resize-none text-xs"></textarea>
             </div>
         </div>
 
         <!-- 連名 -->
         <div id="fieldJointName" class="text-xs">
-            <label class="block font-bold text-slate-300 mb-1" id="lblJointName">連名（ご家族など）</label>
-            <input type="text" id="inputJointName" placeholder="花子（妻）, 翔太（長男）" class="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500">
+            <label class="block font-bold text-slate-300 mb-0.5 text-[11px]" id="lblJointName">連名（ご家族など）</label>
+            <input type="text" id="inputJointName" placeholder="花子（妻）, 翔太（長男）" class="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-xs">
         </div>
 
-        <!-- グループタグ -->
+        <!-- グループタグ (バッジ入力) -->
         <div id="fieldTags" class="text-xs">
-            <label class="block font-bold text-slate-300 mb-1" id="lblTags">グループタグ</label>
+            <label class="block font-bold text-slate-300 mb-0.5 text-[11px]" id="lblTags">グループタグ</label>
             <div class="space-y-1">
-                <div id="modalTagsBadgeList" class="flex flex-wrap gap-1 mb-1 min-h-[24px] p-1 bg-slate-900/60 rounded-lg border border-slate-700/50"></div>
+                <div id="modalTagsBadgeList" class="flex flex-wrap gap-1 mb-1 min-h-[24px] p-1 bg-slate-900/60 rounded-lg border border-slate-700/50">
+                    <!-- JSで動的追加 -->
+                </div>
                 <div class="flex space-x-1.5">
-                    <input type="text" id="inputTags" list="tagCandidateList" placeholder="例: 親戚, 年賀状" class="flex-1 p-1.5 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500">
-                    <button type="button" onclick="addTagFromInput()" class="px-2.5 py-1.5 bg-pink-600 hover:bg-pink-500 text-white font-bold rounded-lg whitespace-nowrap cursor-pointer">
+                    <input type="text" id="inputTags" list="tagCandidateList" placeholder="例: 親戚, 年賀状" class="flex-1 min-w-0 p-1.5 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-xs">
+                    <button type="button" onclick="addTagFromInput()" class="px-2.5 py-1.5 bg-pink-600 hover:bg-pink-500 text-white font-bold rounded-xl whitespace-nowrap cursor-pointer shrink-0 text-xs">
                         追加
                     </button>
                 </div>
                 <datalist id="tagCandidateList"></datalist>
+                <div id="suggestedGroupTags" class="flex flex-wrap gap-1 pt-0.5 text-[10px]">
+                    <!-- 過去のグループタグ候補 -->
+                </div>
             </div>
         </div>
 
-        <!-- やり取り記録タグ -->
+        <!-- やり取り記録タグ (バッジ入力) -->
         <div id="fieldGiftNotes" class="text-xs">
-            <label class="block font-bold text-slate-300 mb-1" id="lblGiftNotes">やり取り記録タグ</label>
+            <label class="block font-bold text-slate-300 mb-0.5 text-[11px]" id="lblGiftNotes">やり取り記録タグ</label>
             <div class="space-y-1">
-                <div id="modalGiftNotesBadgeList" class="flex flex-wrap gap-1 mb-1 min-h-[24px] p-1 bg-slate-900/60 rounded-lg border border-slate-700/50"></div>
+                <div id="modalGiftNotesBadgeList" class="flex flex-wrap gap-1 mb-1 min-h-[24px] p-1 bg-slate-900/60 rounded-lg border border-slate-700/50">
+                    <!-- JSで動的追加 -->
+                </div>
                 <div class="flex space-x-1.5">
-                    <input type="text" id="inputGiftNotes" list="giftCandidateList" placeholder="例: 2026年賀状送付済" class="flex-1 p-1.5 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500">
-                    <button type="button" onclick="addGiftNoteFromInput()" class="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg whitespace-nowrap cursor-pointer">
+                    <input type="text" id="inputGiftNotes" list="giftCandidateList" placeholder="例: 2026年賀状送付済" class="flex-1 min-w-0 p-1.5 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-xs">
+                    <button type="button" onclick="addGiftNoteFromInput()" class="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl whitespace-nowrap cursor-pointer shrink-0 text-xs">
                         追加
                     </button>
                 </div>
                 <datalist id="giftCandidateList"></datalist>
+                <div id="suggestedGiftNotes" class="flex flex-wrap gap-1 pt-0.5 text-[10px]">
+                    <!-- 過去のやり取り記録候補 -->
+                </div>
             </div>
         </div>
 
         <!-- 電話番号 -->
         <div id="fieldPhone" class="text-xs">
-            <label class="block font-bold text-slate-300 mb-1" id="lblPhone">電話番号</label>
-            <input type="tel" id="inputPhone" placeholder="090-1234-5678" class="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500">
+            <label class="block font-bold text-slate-300 mb-0.5 text-[11px]" id="lblPhone">電話番号</label>
+            <input type="tel" id="inputPhone" placeholder="090-1234-5678" class="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-xs">
         </div>
 
         <!-- 会社名/所属 -->
         <div id="fieldCompany" class="text-xs">
-            <label class="block font-bold text-slate-300 mb-1" id="lblCompany">会社名 / 所属</label>
-            <input type="text" id="inputCompany" placeholder="株式会社〇〇" class="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500">
+            <label class="block font-bold text-slate-300 mb-0.5 text-[11px]" id="lblCompany">会社名 / 所属</label>
+            <input type="text" id="inputCompany" placeholder="株式会社〇〇 営業部" class="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-xs">
         </div>
 
         <!-- 自由メモ -->
         <div id="fieldNotes" class="text-xs">
-            <label class="block font-bold text-slate-300 mb-1" id="lblNotes">自由メモ</label>
-            <textarea id="inputNotes" rows="2" placeholder="自由メモなど" class="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500 resize-none"></textarea>
+            <label class="block font-bold text-slate-300 mb-0.5 text-[11px]" id="lblNotes">自由メモ</label>
+            <textarea id="inputNotes" rows="2" placeholder="自由メモ・注意事項など" class="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 resize-none text-xs"></textarea>
         </div>
     </div>
 
-    <!-- 特大表示モーダル -->
-    <div id="zoomModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-3 overflow-y-auto">
-        <div class="bg-slate-900 rounded-2xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border-2 border-amber-500/60 my-auto text-slate-100 relative">
-            <div class="flex justify-between items-start mb-3 pb-2 border-b border-slate-800">
+    <!-- 特大表示モーダル (高齢者向け拡大参照モード) -->
+    <div id="zoomModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-2 sm:p-6 overflow-y-auto">
+        <div class="bg-slate-900 rounded-3xl max-w-2xl w-full p-3 sm:p-8 shadow-2xl border-2 border-amber-500/60 my-auto text-slate-100 relative max-h-[92dvh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-2 sm:mb-4 pb-2 border-b border-slate-800">
                 <div>
                     <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 mb-0.5">
-                        手書き参照用 特大表示
+                        <i class="fa-solid fa-glasses mr-1"></i>手書き参照用 特大表示
                     </span>
-                    <h3 class="text-lg font-bold text-white">拡大参照画面</h3>
+                    <h3 class="text-base sm:text-xl font-bold text-white">拡大参照画面</h3>
                 </div>
-                <button onclick="closeZoomModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
-                    <i class="fa-solid fa-xmark text-xl"></i>
-                </button>
+                <div class="flex items-center space-x-1.5">
+                    <!-- 倍率選択コントロール -->
+                    <div class="flex bg-slate-800 p-0.5 rounded-xl border border-slate-700 text-[10px] sm:text-xs">
+                        <button onclick="setZoomScale(1)" id="zoomScale100" class="px-1.5 py-0.5 sm:py-1 rounded-lg transition font-bold bg-amber-500 text-slate-950">100%</button>
+                        <button onclick="setZoomScale(1.25)" id="zoomScale125" class="px-1.5 py-0.5 sm:py-1 rounded-lg transition font-bold text-slate-300 hover:text-white">125%</button>
+                        <button onclick="setZoomScale(1.5)" id="zoomScale150" class="px-1.5 py-0.5 sm:py-1 rounded-lg transition font-bold text-slate-300 hover:text-white">150%</button>
+                        <button onclick="setZoomScale(1.8)" id="zoomScale180" class="px-1.5 py-0.5 sm:py-1 rounded-lg transition font-bold text-slate-300 hover:text-white">180%</button>
+                    </div>
+                    <button onclick="closeZoomModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
+                        <i class="fa-solid fa-xmark text-lg sm:text-2xl"></i>
+                    </button>
+                </div>
             </div>
 
-            <div id="zoomScaleContainer" class="space-y-4">
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                    <div id="zoomFurigana" class="text-amber-400/90 text-xs sm:text-sm font-bold tracking-widest mb-0.5">ヤマダ タロウ</div>
-                    <div class="flex items-baseline space-x-2">
-                        <div id="zoomName" class="text-2xl sm:text-3xl font-black text-white tracking-wider">山田 太郎</div>
-                        <span class="text-base font-bold text-slate-400">様</span>
+            <!-- スケール可変コンテナ -->
+            <div id="zoomScaleContainer" class="transition-transform duration-200 origin-top-left space-y-3 sm:space-y-6">
+                <!-- 氏名・連名エリア -->
+                <div class="bg-slate-950 p-3 sm:p-5 rounded-2xl border border-slate-800">
+                    <div id="zoomFurigana" class="text-amber-400/90 text-xs sm:text-base font-bold tracking-widest mb-0.5">ヤマダ タロウ</div>
+                    <div class="flex items-baseline space-x-2 sm:space-x-3 flex-wrap">
+                        <div id="zoomName" class="text-xl sm:text-4xl font-black text-white tracking-wider break-all">山田 太郎</div>
+                        <span class="text-base sm:text-xl font-bold text-slate-400">様</span>
                     </div>
-                    <div id="zoomJointName" class="text-sm font-bold text-cyan-300 mt-1 hidden">
-                        連名: <span id="zoomJointNameText"></span>
+                    <div id="zoomJointName" class="text-sm sm:text-xl font-bold text-cyan-300 mt-1 sm:mt-2 hidden">
+                        <i class="fa-solid fa-users mr-1 text-xs"></i>連名: <span id="zoomJointNameText"></span>
                     </div>
                 </div>
 
-                <div class="bg-amber-950/40 p-4 rounded-xl border-2 border-amber-500/50 space-y-2">
-                    <div class="flex items-center justify-between flex-wrap gap-1">
-                        <div class="text-amber-400 font-bold text-[11px] uppercase tracking-wider">郵便番号・住所</div>
-                        <button id="zoomCopyBtn" onclick="copyAddressFromZoom()" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[11px] rounded-lg transition cursor-pointer shadow flex items-center">
-                            <i class="fa-solid fa-copy mr-1"></i>住所コピー
-                        </button>
+                <!-- 郵便番号・住所エリア -->
+                <div class="bg-amber-950/40 p-3 sm:p-5 rounded-2xl border-2 border-amber-500/50 space-y-2 sm:space-y-3">
+                    <div class="flex items-center justify-between flex-wrap gap-1.5">
+                        <div class="text-amber-400 font-bold text-xs uppercase tracking-wider flex items-center">
+                            <i class="fa-solid fa-location-dot mr-1"></i>郵便番号・住所
+                        </div>
+                        <div class="flex items-center space-x-1.5">
+                            <button id="zoomCopyBtn" onclick="copyAddressFromZoom()" class="px-2 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl transition cursor-pointer shadow-md flex items-center">
+                                <i class="fa-solid fa-copy mr-1"></i>コピー
+                            </button>
+                            <button id="zoomShareBtn" onclick="shareContactTextFromZoom()" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl transition cursor-pointer shadow-md flex items-center">
+                                <i class="fa-solid fa-share-nodes mr-1"></i>一括
+                            </button>
+                        </div>
                     </div>
-                    <div id="zoomPostal" class="text-lg sm:text-xl font-mono font-bold text-amber-200">〒 100-0001</div>
-                    <div id="zoomAddress" class="text-xl sm:text-2xl font-black text-white leading-relaxed border-t border-amber-500/30 pt-2">
+                    <div id="zoomPostal" class="text-base sm:text-2xl font-mono font-bold text-amber-200">〒 100-0001</div>
+                    <div id="zoomAddress" class="text-lg sm:text-3xl font-black text-white leading-relaxed tracking-wide border-t border-amber-500/30 pt-2 sm:pt-3 break-all">
                         東京都千代田区千代田1-1
                     </div>
                 </div>
 
-                <div id="zoomNotesBox" class="bg-slate-950 p-3 rounded-xl border border-slate-800 hidden text-xs">
+                <!-- その他詳細情報 -->
+                <div id="zoomDetails" class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs">
+                    <div id="zoomPhoneBox" class="bg-slate-950 p-2.5 sm:p-3 rounded-xl border border-slate-800 hidden">
+                        <span class="text-slate-400 font-bold block mb-0.5">電話番号</span>
+                        <span id="zoomPhone" class="text-xs sm:text-base font-bold text-emerald-400"></span>
+                    </div>
+                    <div id="zoomCompanyBox" class="bg-slate-950 p-2.5 sm:p-3 rounded-xl border border-slate-800 hidden">
+                        <span class="text-slate-400 font-bold block mb-0.5">会社名 / 所属</span>
+                        <span id="zoomCompany" class="text-xs sm:text-sm font-bold text-purple-300"></span>
+                    </div>
+                </div>
+
+                <div id="zoomNotesBox" class="bg-slate-950 p-2.5 sm:p-3 rounded-xl border border-slate-800 hidden text-xs">
                     <span class="text-slate-400 font-bold block mb-0.5">メモ</span>
-                    <p id="zoomNotes" class="text-slate-200 whitespace-pre-wrap"></p>
+                    <p id="zoomNotes" class="text-slate-200 whitespace-pre-wrap leading-relaxed"></p>
                 </div>
             </div>
 
-            <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end space-x-2">
-                <button onclick="closeZoomModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl cursor-pointer transition border border-slate-700">
+            <div class="mt-4 pt-2.5 sm:pt-4 border-t border-slate-800 flex justify-between items-center gap-2">
+                <button id="zoomPrintBtn" onclick="openPrintModalFromZoom()" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl cursor-pointer transition flex items-center space-x-1 shrink-0">
+                    <i class="fa-solid fa-print"></i>
+                    <span>ハガキ印刷</span>
+                </button>
+                <button onclick="closeZoomModal()" class="px-4 sm:px-8 py-1.5 sm:py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm rounded-xl cursor-pointer transition border border-slate-700">
                     閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ハガキ宛名印刷プレビューモーダル -->
+    <div id="printModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-3 sm:p-6 overflow-y-auto">
+        <div class="bg-slate-900 rounded-3xl max-w-lg w-full p-3.5 sm:p-5 shadow-2xl border border-slate-700 text-slate-100 my-auto max-h-[92dvh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-2 pb-1.5 border-b border-slate-800">
+                <h3 class="text-xs sm:text-base font-bold text-slate-100 flex items-center">
+                    <i class="fa-solid fa-print text-emerald-400 mr-2"></i>ハガキ宛名 印刷プレビュー
+                </h3>
+                <button onclick="closePrintModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-base sm:text-lg"></i>
+                </button>
+            </div>
+
+            <p class="text-[11px] sm:text-xs text-slate-400 mb-2.5">ハガキサイズでの宛名印刷用プレビューです。「印刷を実行」でプリンター出力やPDF保存が可能です。</p>
+
+            <!-- 縦書きハガキプレビュー領域 (印刷時に抽出されるエリア) -->
+            <div id="printTargetArea" class="w-[200px] sm:w-[240px] h-[300px] sm:h-[360px] mx-auto bg-white text-black p-3 sm:p-4 rounded-xl shadow-xl border border-slate-300 relative overflow-hidden flex flex-col justify-between">
+                <!-- 郵便番号欄 (右上) -->
+                <div class="flex justify-end space-x-1 font-mono font-bold text-red-600 text-xs sm:text-sm tracking-wider pt-0.5 pr-0.5">
+                    <span id="printPostalCode">100-0001</span>
+                </div>
+
+                <div class="flex justify-between items-start h-[210px] sm:h-[260px] px-1 sm:px-2 pt-1">
+                    <!-- 受取人 氏名 (中央・巨大縦書き) -->
+                    <div class="font-vertical text-lg sm:text-2xl font-bold tracking-widest my-auto text-black pl-1 sm:pl-4">
+                        <span id="printName">山田 太郎</span>
+                        <span class="text-sm sm:text-lg font-normal ml-1">様</span>
+                    </div>
+
+                    <!-- 住所 (右側・縦書き) -->
+                    <div class="font-vertical text-[10px] sm:text-xs font-semibold leading-relaxed text-slate-800 pr-0.5 max-h-[180px] sm:max-h-[220px]">
+                        <span id="printAddress">東京都千代田区千代田１－１</span>
+                    </div>
+                </div>
+
+                <div class="text-[8px] sm:text-[9px] text-slate-400 text-center border-t border-slate-200 pt-0.5">
+                    スマート住所録 宛名プレビュー
+                </div>
+            </div>
+
+            <div class="mt-3 pt-2.5 border-t border-slate-800 flex justify-end space-x-2 text-xs">
+                <button onclick="closePrintModal()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl font-bold cursor-pointer">
+                    閉じる
+                </button>
+                <button onclick="window.print()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg cursor-pointer flex items-center space-x-1">
+                    <i class="fa-solid fa-print"></i>
+                    <span>印刷を実行 (PDF)</span>
                 </button>
             </div>
         </div>
     </div>
 
     <!-- 表示設定モーダル -->
-    <div id="settingsModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3">
-        <div class="bg-slate-800 rounded-xl max-w-md w-full p-4 shadow-2xl border border-slate-700 max-h-[90vh] overflow-y-auto text-xs">
-            <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-700">
-                <h3 class="text-sm font-bold text-slate-100 flex items-center">
-                    <i class="fa-solid fa-gear mr-2 text-amber-400"></i>表示位置・動作設定
+    <div id="settingsModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3 sm:p-4">
+        <div class="bg-slate-800 rounded-2xl max-w-lg w-full p-3.5 sm:p-5 shadow-2xl border border-slate-700 max-h-[90dvh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-2.5 pb-2 border-b border-slate-700">
+                <h3 class="text-xs sm:text-base font-bold text-slate-100 flex items-center">
+                    <i class="fa-solid fa-gear mr-2 text-amber-400"></i>表示位置・順序・動作設定
                 </h3>
                 <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-200 cursor-pointer">
-                    <i class="fa-solid fa-xmark text-base"></i>
+                    <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
-            <!-- テーマ設定 -->
-            <div class="mb-3 p-2.5 bg-slate-900/80 rounded-lg border border-slate-700">
-                <label class="block text-xs font-bold text-slate-200 mb-1.5">カラーテーマ</label>
+            <!-- カラーテーマ切り替え設定 -->
+            <div class="mb-3 p-2.5 bg-slate-900/80 rounded-xl border border-slate-700">
+                <label class="block text-xs font-bold text-slate-200 mb-1.5">
+                    <i class="fa-solid fa-palette text-purple-400 mr-1.5"></i>カラーテーマ設定
+                </label>
                 <div class="grid grid-cols-2 gap-2 text-xs">
-                    <label class="flex items-center space-x-1.5 bg-slate-800 p-1.5 rounded-lg border border-slate-700 cursor-pointer">
+                    <label class="flex items-center space-x-1.5 bg-slate-800 p-1.5 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-700">
                         <input type="radio" name="themeRadio" value="dark" onchange="setAppTheme('dark')" id="themeDarkRadio" class="accent-purple-500">
-                        <span class="text-slate-200 font-bold">ダーク</span>
+                        <span class="text-slate-200 font-bold"><i class="fa-solid fa-moon text-purple-400 mr-1"></i>ダーク</span>
                     </label>
-                    <label class="flex items-center space-x-1.5 bg-slate-800 p-1.5 rounded-lg border border-slate-700 cursor-pointer">
+                    <label class="flex items-center space-x-1.5 bg-slate-800 p-1.5 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-700">
                         <input type="radio" name="themeRadio" value="light" onchange="setAppTheme('light')" id="themeLightRadio" class="accent-amber-500">
-                        <span class="text-slate-200 font-bold">ライト</span>
+                        <span class="text-slate-200 font-bold"><i class="fa-solid fa-sun text-amber-400 mr-1"></i>ライト</span>
                     </label>
                 </div>
             </div>
 
-            <div class="mt-4 pt-2 border-t border-slate-700 text-right">
-                <button onclick="closeSettingsModal()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-lg cursor-pointer">
+            <!-- ダブルクリック動作切り替え設定 -->
+            <div class="mb-3 p-2.5 bg-slate-900/80 rounded-xl border border-slate-700">
+                <label class="block text-xs font-bold text-slate-200 mb-1.5">
+                    <i class="fa-solid fa-hand-pointer text-blue-400 mr-1.5"></i>ダブルクリック時の動作
+                </label>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <label class="flex items-center space-x-1.5 bg-slate-800 p-1.5 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-700">
+                        <input type="radio" name="dblClickRadio" value="zoom" onchange="setDblClickBehavior('zoom')" id="dblClickZoomRadio" class="accent-blue-500">
+                        <span class="text-slate-200 font-bold truncate"><i class="fa-solid fa-magnifying-glass-plus text-amber-400 mr-1"></i>特大表示</span>
+                    </label>
+                    <label class="flex items-center space-x-1.5 bg-slate-800 p-1.5 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-700">
+                        <input type="radio" name="dblClickRadio" value="edit" onchange="setDblClickBehavior('edit')" id="dblClickEditRadio" class="accent-blue-500">
+                        <span class="text-slate-200 font-bold truncate"><i class="fa-solid fa-user-pen text-blue-400 mr-1"></i>編集画面</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 表示エリア・必須・順序カスタマイズ -->
+            <div class="space-y-2">
+                <p class="text-[11px] text-slate-300">
+                    各項目の表示エリア（3段階）および順序を設定できます。
+                </p>
+
+                <div id="fieldSettingsList" class="space-y-1.5 text-xs">
+                    <!-- JSで動的生成 -->
+                </div>
+            </div>
+
+            <div class="mt-3 pt-2.5 border-t border-slate-700 flex justify-between items-center">
+                <button onclick="resetFieldSettings()" class="px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl text-xs font-medium cursor-pointer">
+                    初期状態に戻す
+                </button>
+                <button onclick="saveDisplaySettingsModal()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl cursor-pointer shadow-lg">
+                    保存して反映
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- データ管理モーダル（JSON & CSV 保存・復元） -->
+    <div id="dataModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3 sm:p-4">
+        <div class="bg-slate-800 rounded-2xl max-w-md w-full p-3.5 sm:p-5 shadow-2xl border border-slate-700">
+            <div class="flex justify-between items-center mb-2.5 pb-2 border-b border-slate-700">
+                <h3 class="text-xs sm:text-base font-bold text-slate-100 flex items-center">
+                    <i class="fa-solid fa-database mr-2 text-cyan-400"></i>データのバックアップ・復元
+                </h3>
+                <button onclick="closeDataModal()" class="text-slate-400 hover:text-slate-200 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-2.5 sm:space-y-3 text-xs">
+                <!-- 1. バックアップ出力 (JSON & CSV) -->
+                <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-700 space-y-1.5">
+                    <h4 class="font-bold text-slate-200 flex items-center">
+                        <i class="fa-solid fa-download text-emerald-400 mr-1.5"></i>バックアップ保存 (書き出し)
+                    </h4>
+                    <p class="text-[11px] text-slate-400">全連絡先データをファイルとして保存します。</p>
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <button onclick="exportJSON()" class="py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition cursor-pointer text-center">
+                            <i class="fa-solid fa-file-code mr-1"></i>JSON保存
+                        </button>
+                        <button onclick="exportCSV()" class="py-1.5 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl transition cursor-pointer text-center">
+                            <i class="fa-solid fa-file-excel mr-1"></i>CSV保存
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. データ復元・取り込み (JSON & CSV & TXT対応) -->
+                <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-700 space-y-1.5">
+                    <h4 class="font-bold text-slate-200 flex items-center">
+                        <i class="fa-solid fa-upload text-cyan-400 mr-1.5"></i>データ復元 (取り込み)
+                    </h4>
+                    <p class="text-[11px] text-slate-400">バックアップファイル (JSON/CSV) を取り込みます。</p>
+                    <input type="file" id="jsonFileInput" accept=".json,.csv,.txt,text/plain,text/csv,application/json,*/*" onchange="importDataFile(event)" class="hidden">
+                    <button onclick="document.getElementById('jsonFileInput').click()" class="w-full py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl transition cursor-pointer shadow-md">
+                        <i class="fa-solid fa-file-import mr-1"></i>ファイルを選択して復元
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-3 pt-2 border-t border-slate-700 text-right">
+                <button onclick="closeDataModal()" class="px-3.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold rounded-xl cursor-pointer text-xs">
                     閉じる
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- データ管理モーダル -->
-    <div id="dataModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3">
-        <div class="bg-slate-800 rounded-xl max-w-sm w-full p-4 shadow-2xl border border-slate-700 text-xs">
-            <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-700">
-                <h3 class="text-sm font-bold text-slate-100 flex items-center">
-                    <i class="fa-solid fa-database mr-2 text-cyan-400"></i>データの保存・復元
+    <!-- PWA ホーム画面追加ガイドモーダル -->
+    <div id="pwaModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3 sm:p-4">
+        <div class="bg-slate-800 rounded-2xl max-w-md w-full p-3.5 sm:p-5 shadow-2xl border border-slate-700 text-xs text-slate-300">
+            <div class="flex justify-between items-center mb-2.5 pb-2 border-b border-slate-700">
+                <h3 class="text-xs sm:text-base font-bold text-slate-100 flex items-center">
+                    <i class="fa-solid fa-mobile-screen-button text-purple-400 mr-2"></i>スマホアプリとして追加
                 </h3>
-                <button onclick="closeDataModal()" class="text-slate-400 hover:text-slate-200 cursor-pointer">
-                    <i class="fa-solid fa-xmark text-base"></i>
+                <button onclick="closePwaModal()" class="text-slate-400 hover:text-slate-200 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
-            <div class="space-y-3">
-                <div class="p-2.5 bg-slate-900/80 rounded-lg border border-slate-700 space-y-2">
-                    <h4 class="font-bold text-slate-200">バックアップ保存</h4>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="exportJSON()" class="py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg cursor-pointer text-center">
-                            JSON保存
-                        </button>
-                        <button onclick="exportCSV()" class="py-1.5 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-lg cursor-pointer text-center">
-                            CSV保存
-                        </button>
+            <p class="mb-2.5 text-[11px] text-slate-300">
+                本アプリはホーム画面に追加することで、アプリ単体として全画面で起動できます。
+            </p>
+
+            <div id="pwaInstallPromptBtnArea" class="hidden mb-2.5 p-2 bg-purple-950/60 rounded-xl border border-purple-700/60 text-center">
+                <button onclick="triggerPwaInstall()" class="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center">
+                    <i class="fa-solid fa-download mr-2"></i>アプリとしてインストール
+                </button>
+            </div>
+
+            <div class="space-y-2">
+                <div class="p-2 bg-slate-900 rounded-xl border border-slate-700">
+                    <div class="font-bold text-amber-400 mb-0.5 flex items-center text-xs">
+                        <i class="fa-brands fa-apple mr-1.5 text-sm"></i>iPhone (Safari) の場合
                     </div>
+                    <ol class="list-decimal list-inside space-y-0.5 text-[11px] text-slate-300">
+                        <li>Safariの下部中央にある <strong>「共有」 <i class="fa-solid fa-arrow-up-from-bracket text-blue-400"></i></strong> をタップ</li>
+                        <li><strong>「ホーム画面に追加」 <i class="fa-regular fa-square-plus text-slate-300"></i></strong> を選択</li>
+                    </ol>
                 </div>
 
-                <div class="p-2.5 bg-slate-900/80 rounded-lg border border-slate-700 space-y-2">
-                    <h4 class="font-bold text-slate-200">データ復元</h4>
-                    <input type="file" id="jsonFileInput" accept=".json,.csv,.txt" onchange="importDataFile(event)" class="hidden">
-                    <button onclick="document.getElementById('jsonFileInput').click()" class="w-full py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg cursor-pointer">
-                        ファイルを選択して復元
-                    </button>
+                <div class="p-2 bg-slate-900 rounded-xl border border-slate-700">
+                    <div class="font-bold text-emerald-400 mb-0.5 flex items-center text-xs">
+                        <i class="fa-brands fa-android mr-1.5 text-sm"></i>Android (Chrome) の場合
+                    </div>
+                    <ol class="list-decimal list-inside space-y-0.5 text-[11px] text-slate-300">
+                        <li>Chrome右上にある <strong>「3点メニュー」 <i class="fa-solid fa-ellipsis-vertical text-slate-300"></i></strong> をタップ</li>
+                        <li><strong>「アプリをインストール」</strong> を選択</li>
+                    </ol>
                 </div>
             </div>
 
             <div class="mt-3 pt-2 border-t border-slate-700 text-right">
-                <button onclick="closeDataModal()" class="px-3.5 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold rounded-lg cursor-pointer">
+                <button onclick="closePwaModal()" class="px-3.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold rounded-xl cursor-pointer">
                     閉じる
                 </button>
             </div>
@@ -574,18 +798,18 @@
     </div>
 
     <!-- 削除確認ダイアログ -->
-    <div id="deleteModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3">
-        <div class="bg-slate-800 rounded-xl max-w-xs w-full p-4 shadow-2xl border border-slate-700 text-center">
+    <div id="deleteModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
+        <div class="bg-slate-800 rounded-2xl max-w-xs w-full p-4 shadow-2xl border border-slate-700 text-center">
             <div class="w-10 h-10 bg-rose-500/20 text-rose-400 rounded-full flex items-center justify-center mx-auto mb-2 text-lg">
                 <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
-            <h3 class="text-xs font-bold text-slate-100 mb-1">連絡先を削除しますか？</h3>
+            <h3 class="text-xs font-bold text-slate-100 mb-0.5">連絡先を削除しますか？</h3>
             <p class="text-[11px] text-slate-400 mb-3">この操作は取り消せません。</p>
             <div class="flex justify-center space-x-2 text-xs">
-                <button onclick="closeDeleteModal()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg font-bold cursor-pointer">
+                <button onclick="closeDeleteModal()" class="px-3.5 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl font-bold cursor-pointer">
                     キャンセル
                 </button>
-                <button onclick="confirmDelete()" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg font-bold cursor-pointer">
+                <button onclick="confirmDelete()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold cursor-pointer shadow-lg shadow-rose-600/30">
                     削除する
                 </button>
             </div>
@@ -593,8 +817,8 @@
     </div>
 
     <!-- スマホ専用固定ボトムナビゲーション -->
-    <nav class="sm:hidden fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur-md border-t border-slate-700 z-30 px-2 py-1.5">
-        <div class="grid grid-cols-4 gap-1 text-center text-[10px]">
+    <nav class="sm:hidden fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur-md border-t border-slate-700/80 z-30 px-1 py-1">
+        <div class="grid grid-cols-5 gap-0.5 text-center text-[9px]">
             <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="text-slate-400 hover:text-blue-400 py-0.5 cursor-pointer">
                 <i class="fa-solid fa-magnifying-glass text-sm block mb-0.5"></i>
                 <span>検索</span>
@@ -604,8 +828,8 @@
                 <span>設定</span>
             </button>
             <button onclick="openModal()" class="text-blue-400 font-bold py-0.5 cursor-pointer">
-                <div class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-0.5 shadow">
-                    <i class="fa-solid fa-plus text-xs"></i>
+                <div class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-0.5 shadow-md">
+                    <i class="fa-solid fa-plus text-[10px]"></i>
                 </div>
                 <span>新規追加</span>
             </button>
@@ -613,11 +837,15 @@
                 <i class="fa-solid fa-database text-sm block mb-0.5"></i>
                 <span>保存/復元</span>
             </button>
+            <button onclick="openPwaModal()" class="text-slate-400 hover:text-purple-400 py-0.5 cursor-pointer">
+                <i class="fa-solid fa-mobile-screen-button text-sm block mb-0.5"></i>
+                <span>アプリ化</span>
+            </button>
         </div>
     </nav>
 
     <!-- トースト通知コンテナ -->
-    <div id="toastContainer" class="fixed bottom-20 sm:bottom-6 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+    <div id="toastContainer" class="fixed bottom-16 sm:bottom-6 right-4 left-4 sm:left-auto z-50 flex flex-col space-y-1.5 pointer-events-none items-center sm:items-end"></div>
 
     <!-- アプリ機能スクリプト -->
     <script>
@@ -626,69 +854,250 @@
         let selectedFilterTag = 'ALL';
         let selectedKanaIndex = 'ALL';
         let currentViewMode = 'card';
+        let doubleClickBehavior = 'zoom';
         let currentAppTheme = 'dark';
+        let draggedIndex = null;
+        let currentZoomScale = 1;
+        let deferredPrompt = null;
         let printTargetId = null;
 
         let currentModalTags = [];
         let currentModalGiftNotes = [];
 
         let fieldSettings = [
-            { id: 'name', elId: 'fieldName', zone: 'fixed', isRequired: true },
-            { id: 'address', elId: 'fieldAddress', zone: 'fixed', isRequired: true },
-            { id: 'phone', elId: 'fieldPhone', zone: 'scroll', isRequired: false },
-            { id: 'tags', elId: 'fieldTags', zone: 'scroll', isRequired: false },
-            { id: 'giftNotes', elId: 'fieldGiftNotes', zone: 'scroll', isRequired: false },
-            { id: 'furigana', elId: 'fieldFurigana', zone: 'fold', isRequired: false },
-            { id: 'jointName', elId: 'fieldJointName', zone: 'fold', isRequired: false },
-            { id: 'company', elId: 'fieldCompany', zone: 'fold', isRequired: false },
-            { id: 'notes', elId: 'fieldNotes', zone: 'fold', isRequired: false }
+            { id: 'name', name: 'お名前（姓・名）', elId: 'fieldName', inputIds: ['inputLastName', 'inputFirstName'], icon: 'fa-user', color: 'text-blue-400', zone: 'fixed', isLocked: true, isRequired: true },
+            { id: 'address', name: '郵便番号・住所', elId: 'fieldAddress', inputIds: ['inputAddress'], icon: 'fa-location-dot', color: 'text-emerald-400', zone: 'fixed', isLocked: true, isRequired: true },
+            { id: 'phone', name: '電話番号', elId: 'fieldPhone', inputIds: ['inputPhone'], icon: 'fa-phone', color: 'text-green-400', zone: 'scroll', isLocked: false, isRequired: false },
+            { id: 'tags', name: 'グループタグ', elId: 'fieldTags', inputIds: ['inputTags'], icon: 'fa-tags', color: 'text-pink-400', zone: 'scroll', isLocked: false, isRequired: false },
+            { id: 'giftNotes', name: 'やり取り記録タグ', elId: 'fieldGiftNotes', inputIds: ['inputGiftNotes'], icon: 'fa-gifts', color: 'text-amber-400', zone: 'scroll', isLocked: false, isRequired: false },
+            { id: 'furigana', name: 'フリガナ（セイ・メイ）', elId: 'fieldFurigana', inputIds: ['inputLastFurigana', 'inputFirstFurigana'], icon: 'fa-signature', color: 'text-indigo-400', zone: 'fold', isLocked: false, isRequired: false },
+            { id: 'jointName', name: '連名（ご家族など）', elId: 'fieldJointName', inputIds: ['inputJointName'], icon: 'fa-users', color: 'text-cyan-400', zone: 'fold', isLocked: false, isRequired: false },
+            { id: 'company', name: '会社名 / 所属', elId: 'fieldCompany', inputIds: ['inputCompany'], icon: 'fa-building', color: 'text-purple-400', zone: 'fold', isLocked: false, isRequired: false },
+            { id: 'notes', name: '自由メモ', elId: 'fieldNotes', inputIds: ['inputNotes'], icon: 'fa-note-sticky', color: 'text-sky-400', zone: 'fold', isLocked: false, isRequired: false }
         ];
 
         window.addEventListener('DOMContentLoaded', () => {
             loadContacts();
+            loadDisplaySettings();
             renderKanaIndexBar();
             applyFilters();
+            initPWA();
+
+            document.getElementById('inputTags')?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addTagFromInput();
+                }
+            });
+            document.getElementById('inputGiftNotes')?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addGiftNoteFromInput();
+                }
+            });
         });
 
         function normalizeContactsData() {
             if (!Array.isArray(contacts)) return;
             contacts.forEach(c => {
-                const postalVal = c.postal || c.zip || c.zipCode || c.postalCode || '';
+                const postalVal = c.postal || c.zip || c.zipCode || c.postalCode || c.postal_code || '';
                 c.postal = postalVal;
                 c.zip = postalVal;
+
                 if (c.lastName === undefined) c.lastName = c.name || '';
                 if (c.firstName === undefined) c.firstName = '';
                 if (c.lastFurigana === undefined) c.lastFurigana = c.kana || '';
                 if (c.firstFurigana === undefined) c.firstFurigana = '';
                 if (c.address === undefined) c.address = '';
-                if (!Array.isArray(c.tags)) c.tags = [];
-                if (!Array.isArray(c.giftNotes)) c.giftNotes = [];
+                if (!Array.isArray(c.tags)) c.tags = typeof c.tags === 'string' ? c.tags.split(',').map(s=>s.trim()).filter(Boolean) : [];
+                if (!Array.isArray(c.giftNotes)) c.giftNotes = typeof c.giftNotes === 'string' ? c.giftNotes.split(',').map(s=>s.trim()).filter(Boolean) : [];
             });
+        }
+
+        function loadDisplaySettings() {
+            const saved = localStorage.getItem('address_book_field_settings_v5');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        fieldSettings = parsed;
+                    }
+                } catch(e) {
+                    console.error('表示設定読み込みエラー:', e);
+                }
+            }
+
+            const savedDblClick = localStorage.getItem('address_book_dblclick_behavior');
+            if (savedDblClick === 'edit' || savedDblClick === 'zoom') {
+                doubleClickBehavior = savedDblClick;
+            }
+            updateDblClickGuideText();
+
+            const savedTheme = localStorage.getItem('address_book_theme');
+            if (savedTheme === 'light' || savedTheme === 'dark') {
+                currentAppTheme = savedTheme;
+            }
+            applyAppTheme(currentAppTheme);
         }
 
         function setAppTheme(theme) {
             currentAppTheme = theme;
-            const html = document.documentElement;
-            if (theme === 'light') {
-                html.classList.remove('dark');
-                html.classList.add('theme-light');
-            } else {
-                html.classList.add('dark');
-                html.classList.remove('theme-light');
-            }
+            localStorage.setItem('address_book_theme', theme);
+            applyAppTheme(theme);
+            showToast(theme === 'dark' ? 'ダークモードに変更しました' : 'ライトモードに変更しました', 'info');
         }
 
         function toggleThemeQuick() {
             const newTheme = currentAppTheme === 'dark' ? 'light' : 'dark';
             setAppTheme(newTheme);
+            const themeDarkRadio = document.getElementById('themeDarkRadio');
+            const themeLightRadio = document.getElementById('themeLightRadio');
+            if (newTheme === 'light' && themeLightRadio) themeLightRadio.checked = true;
+            if (newTheme === 'dark' && themeDarkRadio) themeDarkRadio.checked = true;
+        }
+
+        function applyAppTheme(theme) {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeToggleIcon');
+            const text = document.getElementById('themeToggleText');
+
+            if (theme === 'light') {
+                html.classList.remove('dark');
+                html.classList.add('theme-light');
+                if (icon) icon.className = 'fa-solid fa-moon text-purple-400';
+                if (text) text.textContent = 'ダーク';
+            } else {
+                html.classList.add('dark');
+                html.classList.remove('theme-light');
+                if (icon) icon.className = 'fa-solid fa-sun text-amber-400';
+                if (text) text.textContent = 'ライト';
+            }
         }
 
         function openSettingsModal() {
+            renderSettingsList();
+            const zoomRadio = document.getElementById('dblClickZoomRadio');
+            const editRadio = document.getElementById('dblClickEditRadio');
+            if (doubleClickBehavior === 'edit') {
+                if (editRadio) editRadio.checked = true;
+            } else {
+                if (zoomRadio) zoomRadio.checked = true;
+            }
+
+            const themeDarkRadio = document.getElementById('themeDarkRadio');
+            const themeLightRadio = document.getElementById('themeLightRadio');
+            if (currentAppTheme === 'light') {
+                if (themeLightRadio) themeLightRadio.checked = true;
+            } else {
+                if (themeDarkRadio) themeDarkRadio.checked = true;
+            }
+
             document.getElementById('settingsModal')?.classList.remove('hidden');
         }
 
         function closeSettingsModal() {
             document.getElementById('settingsModal')?.classList.add('hidden');
+        }
+
+        function setDblClickBehavior(behavior) {
+            doubleClickBehavior = behavior;
+            localStorage.setItem('address_book_dblclick_behavior', behavior);
+            updateDblClickGuideText();
+            showToast(behavior === 'zoom' ? '動作を「特大表示」に変更しました' : '動作を「編集画面」に変更しました', 'info');
+        }
+
+        function updateDblClickGuideText() {
+            const guideEl = document.getElementById('dblClickGuideText');
+            if (guideEl) {
+                if (doubleClickBehavior === 'edit') {
+                    guideEl.innerHTML = `<i class="fa-solid fa-user-pen mr-1.5 text-blue-400"></i>ダブルクリックで編集画面`;
+                } else {
+                    guideEl.innerHTML = `<i class="fa-solid fa-magnifying-glass-plus mr-1.5 text-amber-400"></i>ダブルクリックで特大表示`;
+                }
+            }
+        }
+
+        function renderSettingsList() {
+            const listEl = document.getElementById('fieldSettingsList');
+            if (!listEl) return;
+
+            listEl.innerHTML = fieldSettings.map((field, idx) => `
+                <div class="p-2 bg-slate-900/90 rounded-xl border border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5">
+                    <div class="flex items-center space-x-1.5 font-bold text-slate-200 text-xs">
+                        <span class="text-slate-500 text-[10px] w-3">${idx + 1}.</span>
+                        <i class="fa-solid ${field.icon} ${field.color}"></i>
+                        <span>${field.name}</span>
+                    </div>
+
+                    <div class="flex items-center space-x-1.5 w-full sm:w-auto justify-end">
+                        <select onchange="updateFieldZone('${field.id}', this.value)" ${field.isLocked ? 'disabled' : ''} class="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-1.5 py-0.5 focus:outline-none ${field.isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}">
+                            <option value="fixed" ${field.zone === 'fixed' ? 'selected' : ''}>固定表示</option>
+                            <option value="scroll" ${field.zone === 'scroll' ? 'selected' : ''}>スクロール表示</option>
+                            <option value="fold" ${field.zone === 'fold' ? 'selected' : ''}>詳細表示</option>
+                        </select>
+
+                        <label class="flex items-center space-x-1 bg-slate-800 px-1.5 py-0.5 rounded-lg border border-slate-700 cursor-pointer text-[10px] ${field.isLocked ? 'opacity-50 cursor-not-allowed' : ''}">
+                            <input type="checkbox" onchange="updateFieldRequired('${field.id}', this.checked)" ${field.isRequired ? 'checked' : ''} ${field.isLocked ? 'disabled' : ''} class="accent-blue-500 rounded">
+                            <span class="text-slate-300">必須</span>
+                        </label>
+
+                        <div class="flex items-center space-x-0.5">
+                            <button onclick="moveFieldSetting(${idx}, -1)" ${idx === 0 ? 'disabled class="opacity-30"' : ''} class="p-0.5 text-slate-400 hover:text-white cursor-pointer">
+                                <i class="fa-solid fa-chevron-up text-xs"></i>
+                            </button>
+                            <button onclick="moveFieldSetting(${idx}, 1)" ${idx === fieldSettings.length - 1 ? 'disabled class="opacity-30"' : ''} class="p-0.5 text-slate-400 hover:text-white cursor-pointer">
+                                <i class="fa-solid fa-chevron-down text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateFieldZone(id, zone) {
+            const target = fieldSettings.find(f => f.id === id);
+            if (target && !target.isLocked) {
+                target.zone = zone;
+            }
+        }
+
+        function updateFieldRequired(id, isReq) {
+            const target = fieldSettings.find(f => f.id === id);
+            if (target && !target.isLocked) {
+                target.isRequired = isReq;
+            }
+        }
+
+        function moveFieldSetting(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= fieldSettings.length) return;
+            const temp = fieldSettings[index];
+            fieldSettings[index] = fieldSettings[newIndex];
+            fieldSettings[newIndex] = temp;
+            renderSettingsList();
+        }
+
+        function resetFieldSettings() {
+            fieldSettings = [
+                { id: 'name', name: 'お名前（姓・名）', elId: 'fieldName', inputIds: ['inputLastName', 'inputFirstName'], icon: 'fa-user', color: 'text-blue-400', zone: 'fixed', isLocked: true, isRequired: true },
+                { id: 'address', name: '郵便番号・住所', elId: 'fieldAddress', inputIds: ['inputAddress'], icon: 'fa-location-dot', color: 'text-emerald-400', zone: 'fixed', isLocked: true, isRequired: true },
+                { id: 'phone', name: '電話番号', elId: 'fieldPhone', inputIds: ['inputPhone'], icon: 'fa-phone', color: 'text-green-400', zone: 'scroll', isLocked: false, isRequired: false },
+                { id: 'tags', name: 'グループタグ', elId: 'fieldTags', inputIds: ['inputTags'], icon: 'fa-tags', color: 'text-pink-400', zone: 'scroll', isLocked: false, isRequired: false },
+                { id: 'giftNotes', name: 'やり取り記録タグ', elId: 'fieldGiftNotes', inputIds: ['inputGiftNotes'], icon: 'fa-gifts', color: 'text-amber-400', zone: 'scroll', isLocked: false, isRequired: false },
+                { id: 'furigana', name: 'フリガナ（セイ・メイ）', elId: 'fieldFurigana', inputIds: ['inputLastFurigana', 'inputFirstFurigana'], icon: 'fa-signature', color: 'text-indigo-400', zone: 'fold', isLocked: false, isRequired: false },
+                { id: 'jointName', name: '連名（ご家族など）', elId: 'fieldJointName', inputIds: ['inputJointName'], icon: 'fa-users', color: 'text-cyan-400', zone: 'fold', isLocked: false, isRequired: false },
+                { id: 'company', name: '会社名 / 所属', elId: 'fieldCompany', inputIds: ['inputCompany'], icon: 'fa-building', color: 'text-purple-400', zone: 'fold', isLocked: false, isRequired: false },
+                { id: 'notes', name: '自由メモ', elId: 'fieldNotes', inputIds: ['inputNotes'], icon: 'fa-note-sticky', color: 'text-sky-400', zone: 'fold', isLocked: false, isRequired: false }
+            ];
+            renderSettingsList();
+            showToast('初期設定に戻しました', 'info');
+        }
+
+        function saveDisplaySettingsModal() {
+            localStorage.setItem('address_book_field_settings_v5', JSON.stringify(fieldSettings));
+            closeSettingsModal();
+            applyFilters();
+            showToast('表示設定を更新しました', 'info');
         }
 
         function loadContacts() {
@@ -698,6 +1107,7 @@
                     contacts = JSON.parse(data);
                     normalizeContactsData();
                 } catch(e) {
+                    console.error('データ読み込みエラー:', e);
                     contacts = getSampleData();
                 }
             } else {
@@ -709,6 +1119,7 @@
         function saveContacts() {
             normalizeContactsData();
             localStorage.setItem('address_book_contacts_v6', JSON.stringify(contacts));
+            updateTagCandidates();
         }
 
         function getSampleData() {
@@ -722,15 +1133,66 @@
                     postal: '100-0001',
                     zip: '100-0001',
                     address: '東京都千代田区千代田1-1',
-                    jointName: '花子（妻）',
+                    jointName: '花子（妻）, 翔太（長男）',
                     phone: '03-1234-5678',
-                    company: 'サンプル株式会社',
+                    company: '株式会社サンプル',
                     tags: ['親戚', '年賀状'],
-                    giftNotes: ['2026年賀状送付済'],
+                    giftNotes: ['2026年賀状送付済', 'お歳暮受領'],
                     notes: '毎年お中元をいただく。',
-                    createdAt: Date.now()
+                    createdAt: Date.now() - 100000
+                },
+                {
+                    id: '2',
+                    lastName: '佐藤',
+                    firstName: '健一',
+                    lastFurigana: 'サトウ',
+                    firstFurigana: 'ケンイチ',
+                    postal: '530-0001',
+                    zip: '530-0001',
+                    address: '大阪府大阪市北区梅田1-2-3',
+                    jointName: '',
+                    phone: '06-9876-5432',
+                    company: '佐藤商事',
+                    tags: ['仕事', '年賀状'],
+                    giftNotes: ['2026年賀状受領'],
+                    notes: '前職の同僚。',
+                    createdAt: Date.now() - 50000
                 }
             ];
+        }
+
+        function updateTagCandidates() {
+            const groupSet = new Set();
+            const giftSet = new Set();
+
+            contacts.forEach(c => {
+                (Array.isArray(c.tags) ? c.tags : []).forEach(t => t && groupSet.add(t));
+                (Array.isArray(c.giftNotes) ? c.giftNotes : []).forEach(g => g && giftSet.add(g));
+            });
+
+            const tagList = document.getElementById('tagCandidateList');
+            if (tagList) tagList.innerHTML = Array.from(groupSet).map(t => `<option value="${t}">`).join('');
+
+            const giftList = document.getElementById('giftCandidateList');
+            if (giftList) giftList.innerHTML = Array.from(giftSet).map(g => `<option value="${g}">`).join('');
+
+            const sugGroupEl = document.getElementById('suggestedGroupTags');
+            if (sugGroupEl) {
+                sugGroupEl.innerHTML = Array.from(groupSet).slice(0, 6).map(t => `
+                    <button type="button" onclick="addTagDirect('${t}')" class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-pink-400 rounded-md border border-slate-700">
+                        + #${t}
+                    </button>
+                `).join('');
+            }
+
+            const sugGiftEl = document.getElementById('suggestedGiftNotes');
+            if (sugGiftEl) {
+                sugGiftEl.innerHTML = Array.from(giftSet).slice(0, 6).map(g => `
+                    <button type="button" onclick="addGiftNoteDirect('${g}')" class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-md border border-slate-700">
+                        + 🎁 ${g}
+                    </button>
+                `).join('');
+            }
         }
 
         function setupModalFormFields() {
@@ -741,47 +1203,69 @@
 
             if (!pool || !fixedZone || !scrollZone || !foldZone) return;
 
+            fixedZone.querySelectorAll('.field-item').forEach(el => el.remove());
+            scrollZone.innerHTML = '';
+            foldZone.innerHTML = '';
+
             fieldSettings.forEach(field => {
                 const el = document.getElementById(field.elId);
                 if (!el) return;
-                if (field.zone === 'fixed') fixedZone.appendChild(el);
-                else if (field.zone === 'scroll') scrollZone.appendChild(el);
-                else foldZone.appendChild(el);
+
+                field.inputIds.forEach(inputId => {
+                    const reqLabel = document.querySelector(`label[for="${inputId}"] span, #${field.elId} label span`);
+                    if (reqLabel) {
+                        reqLabel.style.display = field.isRequired ? 'inline' : 'none';
+                    }
+                });
+
+                el.classList.add('field-item');
+
+                if (field.zone === 'fixed') {
+                    fixedZone.appendChild(el);
+                } else if (field.zone === 'scroll') {
+                    scrollZone.appendChild(el);
+                } else {
+                    foldZone.appendChild(el);
+                }
             });
         }
 
         function openModal(id = null) {
             setupModalFormFields();
+            updateTagCandidates();
 
             const modal = document.getElementById('contactModal');
             const form = document.getElementById('contactForm');
             const title = document.getElementById('modalTitle');
+            const zipStatus = document.getElementById('zipStatus');
 
+            if (zipStatus) zipStatus.textContent = '';
             form.reset();
+
             currentModalTags = [];
             currentModalGiftNotes = [];
 
             if (id) {
                 const contact = contacts.find(c => c.id === id);
                 if (contact) {
-                    title.innerHTML = `<i class="fa-solid fa-user-pen mr-2 text-blue-400"></i>連絡先の編集`;
+                    title.innerHTML = `<i class="fa-solid fa-user-pen mr-1.5 text-blue-400"></i>連絡先の編集`;
                     document.getElementById('contactId').value = contact.id;
                     document.getElementById('inputLastName').value = contact.lastName || '';
                     document.getElementById('inputFirstName').value = contact.firstName || '';
                     document.getElementById('inputLastFurigana').value = contact.lastFurigana || '';
                     document.getElementById('inputFirstFurigana').value = contact.firstFurigana || '';
-                    document.getElementById('inputPostal').value = contact.postal || '';
+                    document.getElementById('inputPostal').value = contact.postal || contact.zip || '';
                     document.getElementById('inputAddress').value = contact.address || '';
                     document.getElementById('inputJointName').value = contact.jointName || '';
                     document.getElementById('inputPhone').value = contact.phone || '';
                     document.getElementById('inputCompany').value = contact.company || '';
                     document.getElementById('inputNotes').value = contact.notes || '';
 
-                    currentModalTags = [...(contact.tags || [])];
-                    currentModalGiftNotes = [...(contact.giftNotes || [])];
+                    currentModalTags = Array.isArray(contact.tags) ? [...contact.tags] : [];
+                    currentModalGiftNotes = Array.isArray(contact.giftNotes) ? [...contact.giftNotes] : [];
                 }
             } else {
-                title.innerHTML = `<i class="fa-solid fa-user-plus mr-2 text-blue-400"></i>新規連絡先の登録`;
+                title.innerHTML = `<i class="fa-solid fa-user-plus mr-1.5 text-blue-400"></i>新規連絡先の登録`;
                 document.getElementById('contactId').value = '';
             }
 
@@ -795,6 +1279,7 @@
                 const el = document.getElementById(field.elId);
                 if (el && pool) pool.appendChild(el);
             });
+
             document.getElementById('contactModal')?.classList.add('hidden');
         }
 
@@ -802,9 +1287,23 @@
             const tagsList = document.getElementById('modalTagsBadgeList');
             if (tagsList) {
                 tagsList.innerHTML = currentModalTags.map((t, idx) => `
-                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-pink-950/80 text-pink-300 border border-pink-700/60">
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-pink-950/80 text-pink-300 border border-pink-700/60">
                         #${t}
-                        <button type="button" onclick="removeModalTag(${idx})" class="ml-1 text-pink-400 cursor-pointer">✕</button>
+                        <button type="button" onclick="removeModalTag(${idx})" class="ml-1 text-pink-400 hover:text-white cursor-pointer">
+                            <i class="fa-solid fa-xmark text-[9px]"></i>
+                        </button>
+                    </span>
+                `).join('');
+            }
+
+            const giftList = document.getElementById('modalGiftNotesBadgeList');
+            if (giftList) {
+                giftList.innerHTML = currentModalGiftNotes.map((g, idx) => `
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-700/60">
+                        🎁 ${g}
+                        <button type="button" onclick="removeModalGiftNote(${idx})" class="ml-1 text-amber-400 hover:text-white cursor-pointer">
+                            <i class="fa-solid fa-xmark text-[9px]"></i>
+                        </button>
                     </span>
                 `).join('');
             }
@@ -814,9 +1313,19 @@
             const input = document.getElementById('inputTags');
             if (!input) return;
             const val = input.value.trim();
-            if (val && !currentModalTags.includes(val)) {
-                currentModalTags.push(val);
+            if (val) {
+                val.split(',').forEach(v => {
+                    const tag = v.trim();
+                    if (tag && !currentModalTags.includes(tag)) currentModalTags.push(tag);
+                });
                 input.value = '';
+                renderModalTagBadges();
+            }
+        }
+
+        function addTagDirect(tag) {
+            if (tag && !currentModalTags.includes(tag)) {
+                currentModalTags.push(tag);
                 renderModalTagBadges();
             }
         }
@@ -830,11 +1339,26 @@
             const input = document.getElementById('inputGiftNotes');
             if (!input) return;
             const val = input.value.trim();
-            if (val && !currentModalGiftNotes.includes(val)) {
-                currentModalGiftNotes.push(val);
+            if (val) {
+                val.split(',').forEach(v => {
+                    const note = v.trim();
+                    if (note && !currentModalGiftNotes.includes(note)) currentModalGiftNotes.push(note);
+                });
                 input.value = '';
                 renderModalTagBadges();
             }
+        }
+
+        function addGiftNoteDirect(note) {
+            if (note && !currentModalGiftNotes.includes(note)) {
+                currentModalGiftNotes.push(note);
+                renderModalTagBadges();
+            }
+        }
+
+        function removeModalGiftNote(idx) {
+            currentModalGiftNotes.splice(idx, 1);
+            renderModalTagBadges();
         }
 
         function toggleAccordion() {
@@ -849,6 +1373,9 @@
         function saveContact(e) {
             e.preventDefault();
 
+            addTagFromInput();
+            addGiftNoteFromInput();
+
             const id = document.getElementById('contactId').value;
             const lastName = document.getElementById('inputLastName').value.trim();
             const firstName = document.getElementById('inputFirstName').value.trim();
@@ -856,7 +1383,7 @@
             const address = document.getElementById('inputAddress').value.trim();
 
             if (!lastName || !firstName || !postal || !address) {
-                showToast('必須項目を入力してください', 'error');
+                showToast('必須項目（姓・名・郵便番号・住所）を入力してください', 'error');
                 return;
             }
 
@@ -875,7 +1402,7 @@
                 tags: [...currentModalTags],
                 giftNotes: [...currentModalGiftNotes],
                 notes: document.getElementById('inputNotes').value.trim(),
-                createdAt: Date.now()
+                createdAt: id ? (contacts.find(c => c.id === id)?.createdAt || Date.now()) : Date.now()
             };
 
             if (id) {
@@ -888,7 +1415,7 @@
             saveContacts();
             closeModal();
             applyFilters();
-            showToast('保存しました', 'success');
+            showToast(id ? '連絡先を更新しました' : '新しい連絡先を登録しました', 'success');
         }
 
         async function searchAddress() {
@@ -898,20 +1425,32 @@
 
             let code = postalInput.value.replace(/[^\d]/g, '');
             if (code.length !== 7) {
-                statusEl.textContent = '7桁の郵便番号を入力してください';
+                statusEl.textContent = '※7桁の郵便番号を入力してください';
+                statusEl.className = 'text-[10px] text-amber-400 mt-0.5 block';
                 return;
             }
+
+            statusEl.textContent = '住所を検索中...';
+            statusEl.className = 'text-[10px] text-blue-400 mt-0.5 block';
 
             try {
                 const res = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${code}`);
                 const data = await res.json();
+
                 if (data.results && data.results.length > 0) {
-                    const r = data.results[0];
-                    document.getElementById('inputAddress').value = `${r.address1}${r.address2}${r.address3}`;
-                    statusEl.textContent = '住所を取得しました';
+                    const result = data.results[0];
+                    const fullAddr = `${result.address1}${result.address2}${result.address3}`;
+                    document.getElementById('inputAddress').value = fullAddr;
+                    statusEl.textContent = '✓ 住所を自動検索・補完しました';
+                    statusEl.className = 'text-[10px] text-emerald-400 mt-0.5 block';
+                } else {
+                    statusEl.textContent = '住所が見つかりませんでした';
+                    statusEl.className = 'text-[10px] text-rose-400 mt-0.5 block';
                 }
             } catch(err) {
-                statusEl.textContent = '検索エラー';
+                console.error(err);
+                statusEl.textContent = '住所検索に失敗しました';
+                statusEl.className = 'text-[10px] text-rose-400 mt-0.5 block';
             }
         }
 
@@ -919,10 +1458,23 @@
             const container = document.getElementById('kanaIndexContainer');
             if (!container) return;
 
-            const kanaList = ['ALL', 'ア', 'カ', 'サ', 'タ', 'ナ', 'ハ', 'マ', 'ヤ', 'ラ', 'ワ'];
+            const kanaList = [
+                { label: 'すべて', value: 'ALL' },
+                { label: 'ア行', value: 'ア' },
+                { label: 'カ行', value: 'カ' },
+                { label: 'サ行', value: 'サ' },
+                { label: 'タ行', value: 'タ' },
+                { label: 'ナ行', value: 'ナ' },
+                { label: 'ハ行', value: 'ハ' },
+                { label: 'マ行', value: 'マ' },
+                { label: 'ヤ行', value: 'ヤ' },
+                { label: 'ラ行', value: 'ラ' },
+                { label: 'ワ行', value: 'ワ' }
+            ];
+
             container.innerHTML = kanaList.map(k => `
-                <button onclick="filterByKana('${k}')" class="px-2 py-0.5 rounded font-bold whitespace-nowrap transition ${selectedKanaIndex === k ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700'}">
-                    ${k === 'ALL' ? 'すべて' : k + '行'}
+                <button onclick="filterByKana('${k.value}')" class="px-2 py-0.5 rounded-lg font-bold whitespace-nowrap transition cursor-pointer shrink-0 text-[11px] ${selectedKanaIndex === k.value ? 'bg-amber-500 text-slate-950 shadow' : 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80'}">
+                    ${k.label}
                 </button>
             `).join('');
         }
@@ -933,18 +1485,63 @@
             applyFilters();
         }
 
+        function checkKanaRow(furigana, targetRow) {
+            if (!furigana) return false;
+            const firstChar = furigana.charAt(0);
+            const map = {
+                'ア': /^[ア-オあ-お]/,
+                'カ': /^[カ-コか-こガ-ゴが-ご]/,
+                'サ': /^[サ-ソさ-そザ-ゾざ-ぞ]/,
+                'タ': /^[タ-トた-とダ-ドだ-ど]/,
+                'ナ': /^[ナ-ノな-の]/,
+                'ハ': /^[ハ-ホは-ほバ-ボば-ぼパ-ポぱ-ぽ]/,
+                'マ': /^[マ-モま-も]/,
+                'ヤ': /^[ヤ-ヨや-よ]/,
+                'ラ': /^[ラ-ロら-ろ]/,
+                'ワ': /^[ワ-ンわ-ん]/
+            };
+            return map[targetRow] ? map[targetRow].test(firstChar) : true;
+        }
+
         function applyFilters() {
             const query = document.getElementById('searchInput')?.value.toLowerCase().trim() || '';
+            const sortMode = document.getElementById('sortSelect')?.value || 'custom';
+            const clearBtn = document.getElementById('clearSearchBtn');
+
+            if (clearBtn) clearBtn.classList.toggle('hidden', query === '');
+
+            renderTagFilterBar();
 
             let filtered = contacts.filter(item => {
-                if (selectedFilterTag !== 'ALL') {
-                    if (!(item.tags || []).includes(selectedFilterTag)) return false;
+                if (selectedKanaIndex !== 'ALL') {
+                    const furigana = item.lastFurigana || item.firstFurigana || '';
+                    if (!checkKanaRow(furigana, selectedKanaIndex)) return false;
                 }
+
+                if (selectedFilterTag !== 'ALL') {
+                    const hasGroup = Array.isArray(item.tags) && item.tags.includes(selectedFilterTag);
+                    const hasGift = Array.isArray(item.giftNotes) && item.giftNotes.includes(selectedFilterTag);
+                    if (!hasGroup && !hasGift) return false;
+                }
+
                 if (!query) return true;
                 const matchName = `${item.lastName || ''}${item.firstName || ''}`.toLowerCase().includes(query);
+                const matchKana = `${item.lastFurigana || ''}${item.firstFurigana || ''}`.toLowerCase().includes(query);
                 const matchAddr = (item.address || '').toLowerCase().includes(query);
-                return matchName || matchAddr;
+                const matchCompany = (item.company || '').toLowerCase().includes(query);
+                const matchNotes = (item.notes || '').toLowerCase().includes(query);
+                const matchJoint = (item.jointName || '').toLowerCase().includes(query);
+                const matchTags = (Array.isArray(item.tags) ? item.tags.join(' ') : '').toLowerCase().includes(query);
+                const matchGifts = (Array.isArray(item.giftNotes) ? item.giftNotes.join(' ') : '').toLowerCase().includes(query);
+
+                return matchName || matchKana || matchAddr || matchCompany || matchNotes || matchJoint || matchTags || matchGifts;
             });
+
+            if (sortMode === 'kanaAsc') {
+                filtered.sort((a, b) => `${a.lastFurigana || ''}${a.firstFurigana || ''}`.localeCompare(`${b.lastFurigana || ''}${b.firstFurigana || ''}`, 'ja'));
+            } else if (sortMode === 'kanaDesc') {
+                filtered.sort((a, b) => `${b.lastFurigana || ''}${b.firstFurigana || ''}`.localeCompare(`${a.lastFurigana || ''}${a.firstFurigana || ''}`, 'ja'));
+            }
 
             const countEl = document.getElementById('contactCount');
             if (countEl) countEl.textContent = `${filtered.length} 件`;
@@ -959,6 +1556,40 @@
             }
         }
 
+        function renderTagFilterBar() {
+            const container = document.getElementById('tagFilterContainer');
+            if (!container) return;
+
+            const allTags = new Set();
+            contacts.forEach(c => {
+                (Array.isArray(c.tags) ? c.tags : []).forEach(t => t && allTags.add(t));
+                (Array.isArray(c.giftNotes) ? c.giftNotes : []).forEach(g => g && allTags.add(g));
+            });
+
+            let html = `
+                <button onclick="filterByTag('ALL')" class="px-2 py-0.5 rounded-full whitespace-nowrap text-[11px] font-bold transition cursor-pointer shrink-0 ${selectedFilterTag === 'ALL' ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'}">
+                    すべて (${contacts.length})
+                </button>
+            `;
+
+            Array.from(allTags).forEach(tag => {
+                const count = contacts.filter(c => (c.tags || []).includes(tag) || (c.giftNotes || []).includes(tag)).length;
+                const isSelected = selectedFilterTag === tag;
+                html += `
+                    <button onclick="filterByTag('${tag}')" class="px-2 py-0.5 rounded-full whitespace-nowrap text-[11px] font-bold transition cursor-pointer shrink-0 ${isSelected ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'}">
+                        #${tag} (${count})
+                    </button>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function filterByTag(tag) {
+            selectedFilterTag = tag;
+            applyFilters();
+        }
+
         function clearSearch() {
             const input = document.getElementById('searchInput');
             if (input) input.value = '';
@@ -967,67 +1598,147 @@
 
         function switchViewMode(mode) {
             currentViewMode = mode;
+            const cardBtn = document.getElementById('viewCardBtn');
+            const tableBtn = document.getElementById('viewTableBtn');
             const cardContainer = document.getElementById('cardViewContainer');
             const tableContainer = document.getElementById('tableViewContainer');
 
             if (mode === 'card') {
+                cardBtn.className = 'px-2 py-1 text-xs rounded-lg transition font-medium cursor-pointer flex items-center space-x-1 bg-blue-600 text-white';
+                tableBtn.className = 'px-2 py-1 text-xs rounded-lg transition font-medium cursor-pointer flex items-center space-x-1 text-slate-400 hover:text-slate-200';
                 cardContainer.classList.remove('hidden');
                 tableContainer.classList.add('hidden');
             } else {
+                cardBtn.className = 'px-2 py-1 text-xs rounded-lg transition font-medium cursor-pointer flex items-center space-x-1 text-slate-400 hover:text-slate-200';
+                tableBtn.className = 'px-2 py-1 text-xs rounded-lg transition font-medium cursor-pointer flex items-center space-x-1 bg-blue-600 text-white';
                 cardContainer.classList.add('hidden');
                 tableContainer.classList.remove('hidden');
             }
             applyFilters();
         }
 
+        function handleCardDblClick(id) {
+            if (doubleClickBehavior === 'edit') {
+                openModal(id);
+            } else {
+                openZoomModal(id);
+            }
+        }
+
         function renderCardView(items) {
             const container = document.getElementById('cardViewContainer');
             if (!container) return;
 
-            container.innerHTML = items.map(item => {
+            container.innerHTML = items.map((item, index) => {
+                const isFirst = index === 0;
+                const isLast = index === items.length - 1;
+                const displayPostal = item.postal || item.zip || '';
+
+                let extraHtml = '';
+                fieldSettings.forEach(field => {
+                    if (field.id === 'name' || field.id === 'address') return;
+
+                    if (field.id === 'furigana' && (item.lastFurigana || item.firstFurigana)) {
+                        extraHtml += `<div class="text-[11px] text-indigo-400 font-bold mb-0.5"><i class="fa-solid fa-signature mr-1"></i>${item.lastFurigana || ''} ${item.firstFurigana || ''}</div>`;
+                    }
+                    if (field.id === 'jointName' && item.jointName) {
+                        extraHtml += `<div class="text-xs font-bold text-cyan-300 mb-1"><i class="fa-solid fa-users mr-1"></i>連名: ${item.jointName}</div>`;
+                    }
+                    if (field.id === 'phone' && item.phone) {
+                        extraHtml += `<div class="text-xs font-bold text-emerald-400 mb-1"><i class="fa-solid fa-phone mr-1"></i><a href="tel:${item.phone}" class="hover:underline">${item.phone}</a></div>`;
+                    }
+                    if (field.id === 'company' && item.company) {
+                        extraHtml += `<div class="text-xs text-purple-300 font-medium mb-1"><i class="fa-solid fa-building mr-1"></i>${item.company}</div>`;
+                    }
+                    if (field.id === 'tags' && Array.isArray(item.tags) && item.tags.length > 0) {
+                        extraHtml += `
+                            <div class="flex flex-wrap gap-1 my-1">
+                                ${item.tags.map(t => `<span class="px-1.5 py-0.5 bg-pink-950/80 text-pink-300 rounded-md text-[10px] font-bold border border-pink-700/50">#${t}</span>`).join('')}
+                            </div>
+                        `;
+                    }
+                    if (field.id === 'giftNotes' && Array.isArray(item.giftNotes) && item.giftNotes.length > 0) {
+                        extraHtml += `
+                            <div class="flex flex-wrap gap-1 my-1">
+                                ${item.giftNotes.map(g => `<span class="px-1.5 py-0.5 bg-amber-950/80 text-amber-300 rounded-md text-[10px] font-bold border border-amber-700/50">🎁 ${g}</span>`).join('')}
+                            </div>
+                        `;
+                    }
+                    if (field.id === 'notes' && item.notes) {
+                        extraHtml += `<div class="text-xs text-slate-300 bg-slate-900/80 p-2 rounded-lg border border-slate-700/60 my-1 whitespace-pre-wrap"><i class="fa-solid fa-note-sticky text-sky-400 mr-1"></i>${item.notes}</div>`;
+                    }
+                });
+
                 return `
-                    <div class="bg-slate-800 rounded-xl p-3 border border-slate-700/80 shadow-md space-y-2">
-                        <!-- スマホ対応：ヘッダー（名前領域と操作ボタン群を2段に分離） -->
-                        <div class="space-y-1.5 pb-2 border-b border-slate-700/60">
-                            <!-- 1段目: 名前領域 -->
-                            <div>
-                                <div class="text-[10px] text-slate-400 font-bold">
-                                    ${item.lastFurigana || ''} ${item.firstFurigana || ''}
+                    <div id="card-${item.id}"
+                         draggable="true"
+                         ondragstart="handleDragStart(event, ${index})"
+                         ondragover="handleDragOver(event)"
+                         ondragleave="handleDragLeave(event)"
+                         ondrop="handleDrop(event, ${index})"
+                         ondblclick="handleCardDblClick('${item.id}')"
+                         class="bg-slate-800 rounded-2xl p-3 sm:p-4 border border-slate-700/80 shadow-lg hover:border-slate-600 transition flex flex-col justify-between relative group">
+
+                        <div>
+                            <div class="flex justify-between items-start mb-1.5 pb-1.5 border-b border-slate-700/60 gap-1">
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-[10px] text-slate-400 font-bold tracking-widest truncate">
+                                        ${item.lastFurigana || ''} ${item.firstFurigana || ''}
+                                    </div>
+                                    <h3 class="text-base sm:text-lg font-black text-slate-100 flex items-center truncate">
+                                        ${item.lastName || ''} ${item.firstName || ''}
+                                        <span class="text-xs text-slate-400 ml-1 font-normal shrink-0">様</span>
+                                    </h3>
                                 </div>
-                                <h3 class="text-base sm:text-lg font-black text-slate-100 flex items-center">
-                                    ${item.lastName || ''} ${item.firstName || ''}
-                                    <span class="text-xs text-slate-400 ml-1 font-normal">様</span>
-                                </h3>
+
+                                <div class="flex items-center space-x-1 bg-slate-900/90 p-0.5 sm:p-1 rounded-xl border border-slate-700 shrink-0">
+                                    <span title="ドラッグで並び替え" class="hidden sm:inline-block p-1 text-slate-500 hover:text-slate-300 cursor-grab">
+                                        <i class="fa-solid fa-grip-vertical text-xs"></i>
+                                    </span>
+                                    <button onclick="moveContact(${index}, -1)" ${isFirst ? 'disabled class="p-0.5 sm:p-1 text-slate-600 cursor-not-allowed"' : 'class="p-0.5 sm:p-1 text-slate-400 hover:text-white cursor-pointer"'}>
+                                        <i class="fa-solid fa-chevron-up text-xs"></i>
+                                    </button>
+                                    <button onclick="moveContact(${index}, 1)" ${isLast ? 'disabled class="p-0.5 sm:p-1 text-slate-600 cursor-not-allowed"' : 'class="p-0.5 sm:p-1 text-slate-400 hover:text-white cursor-pointer"'}>
+                                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                                    </button>
+                                    <div class="w-px h-3 bg-slate-700 my-auto"></div>
+                                    <button onclick="openPrintModal('${item.id}')" title="ハガキ宛名印刷" class="p-0.5 sm:p-1 text-emerald-400 hover:text-emerald-300 cursor-pointer">
+                                        <i class="fa-solid fa-print text-xs"></i>
+                                    </button>
+                                    <button onclick="openZoomModal('${item.id}')" title="手書き特大表示" class="p-0.5 sm:p-1 text-amber-400 hover:text-amber-300 cursor-pointer">
+                                        <i class="fa-solid fa-magnifying-glass-plus text-xs"></i>
+                                    </button>
+                                    <button onclick="openModal('${item.id}')" title="編集" class="p-0.5 sm:p-1 text-blue-400 hover:text-blue-300 cursor-pointer">
+                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                    </button>
+                                    <button onclick="openDeleteModal('${item.id}')" title="削除" class="p-0.5 sm:p-1 text-rose-400 hover:text-rose-300 cursor-pointer">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                    </button>
+                                </div>
                             </div>
 
-                            <!-- 2段目: 操作ボタン群 -->
-                            <div class="flex items-center justify-end space-x-1 bg-slate-900/90 p-1 rounded-lg border border-slate-700/80 w-fit ml-auto">
-                                <button onclick="openZoomModal('${item.id}')" title="拡大表示" class="px-2 py-1 bg-amber-500/20 text-amber-400 rounded hover:bg-amber-500/30 text-xs font-bold flex items-center space-x-1">
-                                    <i class="fa-solid fa-magnifying-glass-plus"></i>
-                                    <span>拡大</span>
-                                </button>
-                                <button onclick="openModal('${item.id}')" title="編集" class="px-2 py-1 bg-blue-600/20 text-blue-400 rounded hover:bg-blue-600/30 text-xs font-bold flex items-center space-x-1">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                    <span>編集</span>
-                                </button>
-                                <button onclick="openDeleteModal('${item.id}')" title="削除" class="p-1 text-rose-400 hover:text-rose-300 text-xs">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
+                            <div class="bg-blue-950/60 p-2 sm:p-2.5 rounded-xl border border-blue-900/80 mb-2 space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-mono font-bold text-blue-300">〒 ${displayPostal}</span>
+                                    <div class="flex space-x-1">
+                                        <button onclick="copyAddress('${displayPostal}', '${item.address || ''}')" class="px-1.5 py-0.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg transition cursor-pointer flex items-center space-x-0.5 shadow">
+                                            <i class="fa-solid fa-copy"></i>
+                                            <span>住所</span>
+                                        </button>
+                                        <button onclick="shareContactText('${item.id}')" class="px-1.5 py-0.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] rounded-lg transition cursor-pointer flex items-center space-x-0.5 shadow">
+                                            <i class="fa-solid fa-share-nodes"></i>
+                                            <span>一括</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="text-xs sm:text-sm font-bold text-slate-100 leading-snug tracking-wide break-all">
+                                    ${item.address || ''}
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- 住所エリア -->
-                        <div class="bg-blue-950/40 p-2.5 rounded-lg border border-blue-900/60 space-y-0.5">
-                            <div class="text-[10px] font-mono font-bold text-blue-300">〒 ${item.postal || ''}</div>
-                            <div class="text-xs font-bold text-slate-100 leading-snug">
-                                ${item.address || ''}
+                            <div class="space-y-0.5">
+                                ${extraHtml}
                             </div>
-                        </div>
-
-                        <!-- 電話・グループ -->
-                        <div class="text-xs space-y-1">
-                            ${item.phone ? `<div class="text-emerald-400 font-bold"><i class="fa-solid fa-phone mr-1"></i>${item.phone}</div>` : ''}
-                            ${item.notes ? `<div class="text-slate-300 bg-slate-900/60 p-1.5 rounded border border-slate-700/50 text-[11px]">${item.notes}</div>` : ''}
                         </div>
                     </div>
                 `;
@@ -1038,31 +1749,187 @@
             const tbody = document.getElementById('tableTbody');
             if (!tbody) return;
 
-            tbody.innerHTML = items.map(item => `
-                <tr class="hover:bg-slate-700/40">
-                    <td class="py-2 px-2 text-center align-middle border-r border-slate-700/50">
-                        <div class="flex justify-center space-x-1">
-                            <button onclick="openZoomModal('${item.id}')" class="p-1 text-amber-400"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
-                            <button onclick="openModal('${item.id}')" class="p-1 text-blue-400"><i class="fa-solid fa-pen-to-square"></i></button>
-                        </div>
-                    </td>
-                    <td class="py-2 px-1 text-center align-middle border-r border-slate-700/50 text-[10px] text-slate-400">-</td>
-                    <td class="py-2 px-3 align-middle">
-                        <div class="font-bold text-white text-xs">${item.lastName || ''} ${item.firstName || ''} 様</div>
-                        <div class="text-[11px] text-slate-300">〒${item.postal || ''} ${item.address || ''}</div>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = items.map((item, index) => {
+                const isFirst = index === 0;
+                const isLast = index === items.length - 1;
+                const displayPostal = item.postal || item.zip || '';
+
+                const tagsHtml = (Array.isArray(item.tags) ? item.tags : []).map(t => `<span class="px-1.5 py-0.5 bg-pink-950/80 text-pink-300 rounded text-[10px] font-bold border border-pink-700/50 mr-1">#${t}</span>`).join('');
+                const giftsHtml = (Array.isArray(item.giftNotes) ? item.giftNotes : []).map(g => `<span class="px-1.5 py-0.5 bg-amber-950/80 text-amber-300 rounded text-[10px] font-bold border border-amber-700/50 mr-1">🎁 ${g}</span>`).join('');
+
+                return `
+                    <tr ondblclick="handleCardDblClick('${item.id}')" class="hover:bg-slate-700/40 transition">
+                        <td class="py-1.5 px-1 text-center align-middle border-r border-slate-700/50">
+                            <div class="grid grid-cols-2 gap-0.5 w-10 mx-auto">
+                                <button onclick="openZoomModal('${item.id}')" title="特大表示" class="p-0.5 bg-slate-900 hover:bg-slate-700 text-amber-400 rounded border border-slate-700 cursor-pointer">
+                                    <i class="fa-solid fa-magnifying-glass-plus text-xs"></i>
+                                </button>
+                                <button onclick="openPrintModal('${item.id}')" title="ハガキ印刷" class="p-0.5 bg-slate-900 hover:bg-slate-700 text-emerald-400 rounded border border-slate-700 cursor-pointer">
+                                    <i class="fa-solid fa-print text-xs"></i>
+                                </button>
+                                <button onclick="openModal('${item.id}')" title="編集" class="p-0.5 bg-slate-900 hover:bg-slate-700 text-blue-400 rounded border border-slate-700 cursor-pointer">
+                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                </button>
+                                <button onclick="openDeleteModal('${item.id}')" title="削除" class="p-0.5 bg-slate-900 hover:bg-slate-700 text-rose-400 rounded border border-slate-700 cursor-pointer">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </td>
+
+                        <td class="py-1.5 px-1 text-center align-middle border-r border-slate-700/50">
+                            <div class="flex flex-col items-center space-y-0.5">
+                                <button onclick="moveContact(${index}, -1)" ${isFirst ? 'disabled class="text-slate-600 cursor-not-allowed"' : 'class="text-slate-400 hover:text-white cursor-pointer"'}>
+                                    <i class="fa-solid fa-chevron-up text-xs"></i>
+                                </button>
+                                <button onclick="moveContact(${index}, 1)" ${isLast ? 'disabled class="text-slate-600 cursor-not-allowed"' : 'class="text-slate-400 hover:text-white cursor-pointer"'}>
+                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                                </button>
+                            </div>
+                        </td>
+
+                        <td class="py-2 px-2.5 align-middle">
+                            <div class="flex flex-col sm:flex-row sm:items-baseline sm:space-x-2">
+                                <span class="text-[10px] text-slate-400 font-bold">${item.lastFurigana || ''} ${item.firstFurigana || ''}</span>
+                                <span class="text-xs sm:text-sm font-bold text-white">${item.lastName || ''} ${item.firstName || ''} 様</span>
+                                ${item.jointName ? `<span class="text-[11px] text-cyan-300 font-medium">(${item.jointName})</span>` : ''}
+                            </div>
+                            <div class="text-xs font-bold text-slate-200 mt-0.5 break-all">
+                                <span class="text-blue-400 font-mono">〒${displayPostal}</span> ${item.address || ''}
+                            </div>
+                            <div class="flex flex-wrap items-center gap-1 mt-0.5">
+                                ${item.phone ? `<span class="text-[10px] text-emerald-400 font-bold mr-1.5"><i class="fa-solid fa-phone mr-0.5"></i>${item.phone}</span>` : ''}
+                                ${item.company ? `<span class="text-[10px] text-purple-300 font-medium mr-1.5"><i class="fa-solid fa-building mr-0.5"></i>${item.company}</span>` : ''}
+                                ${tagsHtml}
+                                ${giftsHtml}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function handleDragStart(e, index) {
+            draggedIndex = index;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const card = e.target.closest('[draggable="true"]');
+            if (card) card.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            const card = e.target.closest('[draggable="true"]');
+            if (card) card.classList.remove('drag-over');
+        }
+
+        function handleDrop(e, targetIndex) {
+            e.preventDefault();
+            const card = e.target.closest('[draggable="true"]');
+            if (card) card.classList.remove('drag-over');
+
+            if (draggedIndex !== null && draggedIndex !== targetIndex) {
+                const movedItem = contacts.splice(draggedIndex, 1)[0];
+                contacts.splice(targetIndex, 0, movedItem);
+                saveContacts();
+                applyFilters();
+                showToast('並び順を変更しました', 'info');
+            }
+            draggedIndex = null;
+        }
+
+        function moveContact(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= contacts.length) return;
+            const temp = contacts[index];
+            contacts[index] = contacts[newIndex];
+            contacts[newIndex] = temp;
+            saveContacts();
+            applyFilters();
+            showToast('順序を移動しました', 'info');
+        }
+
+        function copyAddress(postal, address) {
+            const textToCopy = `〒${postal || ''}\n${address || ''}`;
+            copyTextToClipboard(textToCopy, '✓ 住所をコピーしました');
+        }
+
+        function shareContactText(id) {
+            const item = contacts.find(c => c.id === id);
+            if (!item) return;
+            const text = `【名前】${item.lastName || ''} ${item.firstName || ''} 様\n【郵便番号】〒${item.postal || item.zip || ''}\n【住所】${item.address || ''}\n【電話】${item.phone || 'なし'}\n【会社】${item.company || 'なし'}`;
+            copyTextToClipboard(text, '✓ 連絡先情報をコピーしました (LINE/メール用)');
+        }
+
+        function copyTextToClipboard(text, successMsg) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast(successMsg, 'success');
+                }).catch(() => fallbackCopy(text, successMsg));
+            } else {
+                fallbackCopy(text, successMsg);
+            }
+        }
+
+        function fallbackCopy(text, successMsg) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast(successMsg, 'success');
+            } catch (err) {
+                showToast('コピーに失敗しました', 'error');
+            }
+            document.body.removeChild(textArea);
         }
 
         function openZoomModal(id) {
             const item = contacts.find(c => c.id === id);
             if (!item) return;
 
+            printTargetId = id;
+
             document.getElementById('zoomFurigana').textContent = `${item.lastFurigana || ''} ${item.firstFurigana || ''}`;
             document.getElementById('zoomName').textContent = `${item.lastName || ''} ${item.firstName || ''}`;
-            document.getElementById('zoomPostal').textContent = `〒 ${item.postal || ''}`;
+
+            const jointEl = document.getElementById('zoomJointName');
+            const jointTextEl = document.getElementById('zoomJointNameText');
+            if (item.jointName) {
+                jointTextEl.textContent = item.jointName;
+                jointEl.classList.remove('hidden');
+            } else {
+                jointEl.classList.add('hidden');
+            }
+
+            const displayPostal = item.postal || item.zip || '';
+            document.getElementById('zoomPostal').textContent = `〒 ${displayPostal}`;
             document.getElementById('zoomAddress').textContent = item.address || '';
+
+            document.getElementById('zoomCopyBtn').onclick = () => copyAddress(displayPostal, item.address || '');
+
+            const phoneBox = document.getElementById('zoomPhoneBox');
+            if (item.phone) {
+                document.getElementById('zoomPhone').textContent = item.phone;
+                phoneBox.classList.remove('hidden');
+            } else {
+                phoneBox.classList.add('hidden');
+            }
+
+            const companyBox = document.getElementById('zoomCompanyBox');
+            if (item.company) {
+                document.getElementById('zoomCompany').textContent = item.company;
+                companyBox.classList.remove('hidden');
+            } else {
+                companyBox.classList.add('hidden');
+            }
 
             const notesBox = document.getElementById('zoomNotesBox');
             if (item.notes) {
@@ -1072,6 +1939,7 @@
                 notesBox.classList.add('hidden');
             }
 
+            setZoomScale(1);
             document.getElementById('zoomModal').classList.remove('hidden');
         }
 
@@ -1079,57 +1947,53 @@
             document.getElementById('zoomModal').classList.add('hidden');
         }
 
-        function openDataModal() {
-            document.getElementById('dataModal').classList.remove('hidden');
-        }
+        function setZoomScale(scale) {
+            currentZoomScale = scale;
+            const container = document.getElementById('zoomScaleContainer');
+            if (container) {
+                container.style.transform = `scale(${scale})`;
+            }
 
-        function closeDataModal() {
-            document.getElementById('dataModal').classList.add('hidden');
-        }
-
-        function exportJSON() {
-            const jsonStr = JSON.stringify(contacts, null, 2);
-            const blob = new Blob([jsonStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `address_book_backup.json`;
-            a.click();
-        }
-
-        function exportCSV() {
-            let csv = "\uFEFF姓,名,郵便番号,住所\n";
-            contacts.forEach(c => {
-                csv += `"${c.lastName || ''}","${c.firstName || ''}","${c.postal || ''}","${c.address || ''}"\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `address_book.csv`;
-            a.click();
-        }
-
-        function importDataFile(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    const imported = JSON.parse(event.target.result);
-                    if (Array.isArray(imported)) {
-                        contacts = imported;
-                        saveContacts();
-                        applyFilters();
-                        closeDataModal();
-                        showToast('データを復元しました', 'success');
+            [1, 1.25, 1.5, 1.8].forEach(s => {
+                const btn = document.getElementById(`zoomScale${s.toString().replace('.', '')}`);
+                if (btn) {
+                    if (s === scale) {
+                        btn.className = 'px-1.5 py-0.5 rounded-lg transition font-bold bg-amber-500 text-slate-950';
+                    } else {
+                        btn.className = 'px-1.5 py-0.5 rounded-lg transition font-bold text-slate-300 hover:text-white';
                     }
-                } catch(err) {
-                    showToast('読み込み失敗', 'error');
                 }
-            };
-            reader.readAsText(file);
+            });
+        }
+
+        function copyAddressFromZoom() {
+            const postal = document.getElementById('zoomPostal').textContent.replace('〒 ', '');
+            const address = document.getElementById('zoomAddress').textContent;
+            copyAddress(postal, address);
+        }
+
+        function shareContactTextFromZoom() {
+            if (printTargetId) shareContactText(printTargetId);
+        }
+
+        function openPrintModalFromZoom() {
+            closeZoomModal();
+            if (printTargetId) openPrintModal(printTargetId);
+        }
+
+        function openPrintModal(id) {
+            const item = contacts.find(c => c.id === id);
+            if (!item) return;
+
+            document.getElementById('printName').textContent = `${item.lastName || ''} ${item.firstName || ''}`;
+            document.getElementById('printPostalCode').textContent = item.postal || item.zip || '';
+            document.getElementById('printAddress').textContent = item.address || '';
+
+            document.getElementById('printModal').classList.remove('hidden');
+        }
+
+        function closePrintModal() {
+            document.getElementById('printModal').classList.add('hidden');
         }
 
         function openDeleteModal(id) {
@@ -1148,7 +2012,203 @@
                 saveContacts();
                 closeDeleteModal();
                 applyFilters();
-                showToast('削除しました', 'info');
+                showToast('連絡先を削除しました', 'info');
+            }
+        }
+
+        function openDataModal() {
+            document.getElementById('dataModal').classList.remove('hidden');
+        }
+
+        function closeDataModal() {
+            document.getElementById('dataModal').classList.add('hidden');
+        }
+
+        function exportJSON() {
+            normalizeContactsData();
+            const jsonStr = JSON.stringify(contacts, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.href = url;
+            downloadAnchor.download = `smart_address_book_backup_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            showToast('バックアップJSONをダウンロードしました', 'success');
+        }
+
+        function exportCSV() {
+            normalizeContactsData();
+            let csv = "\uFEFF";
+            csv += "姓,名,セイ,メイ,郵便番号,住所,連名,電話番号,会社名,グループタグ,やり取り記録,自由メモ\n";
+
+            contacts.forEach(c => {
+                const row = [
+                    c.lastName || '',
+                    c.firstName || '',
+                    c.lastFurigana || '',
+                    c.firstFurigana || '',
+                    c.postal || c.zip || '',
+                    c.address || '',
+                    c.jointName || '',
+                    c.phone || '',
+                    c.company || '',
+                    Array.isArray(c.tags) ? c.tags.join(';') : '',
+                    Array.isArray(c.giftNotes) ? c.giftNotes.join(';') : '',
+                    c.notes || ''
+                ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+                csv += row + "\n";
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `address_book_${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            showToast('CSVファイルを保存しました (Excel等で開けます)', 'success');
+        }
+
+        function importDataFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+
+            reader.onload = (event) => {
+                try {
+                    const content = event.target.result;
+                    let success = false;
+
+                    try {
+                        const imported = JSON.parse(content);
+                        const dataArray = Array.isArray(imported) ? imported : (imported.contacts || imported.data);
+                        if (Array.isArray(dataArray) && dataArray.length > 0) {
+                            contacts = dataArray;
+                            normalizeContactsData();
+                            saveContacts();
+                            applyFilters();
+                            closeDataModal();
+                            showToast(`✓ ${contacts.length}件の連絡先を復元しました`, 'success');
+                            success = true;
+                        }
+                    } catch (jsonErr) {
+                        // スキップ
+                    }
+
+                    if (!success) {
+                        const csvSuccess = parseCSVAndImport(content);
+                        if (!csvSuccess) {
+                            showToast('ファイルの形式を自動判定できませんでした (JSON/CSV)', 'error');
+                        }
+                    }
+                } catch(err) {
+                    console.error(err);
+                    showToast('ファイルの読み込みに失敗しました', 'error');
+                } finally {
+                    e.target.value = '';
+                }
+            };
+
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        function parseCSVAndImport(csvText) {
+            if (!csvText || typeof csvText !== 'string') return false;
+            const lines = csvText.split(/\r\n|\n/).filter(line => line.trim());
+            if (lines.length <= 1) return false;
+
+            const newContacts = [];
+            for (let i = 1; i < lines.length; i++) {
+                const cols = parseCSVRow(lines[i]);
+                if (cols.length < 2) continue;
+
+                newContacts.push({
+                    id: (Date.now() + i).toString(),
+                    lastName: cols[0] || '',
+                    firstName: cols[1] || '',
+                    lastFurigana: cols[2] || '',
+                    firstFurigana: cols[3] || '',
+                    postal: cols[4] || '',
+                    zip: cols[4] || '',
+                    address: cols[5] || '',
+                    jointName: cols[6] || '',
+                    phone: cols[7] || '',
+                    company: cols[8] || '',
+                    tags: cols[9] ? cols[9].split(';').map(s=>s.trim()).filter(Boolean) : [],
+                    giftNotes: cols[10] ? cols[10].split(';').map(s=>s.trim()).filter(Boolean) : [],
+                    notes: cols[11] || '',
+                    createdAt: Date.now()
+                });
+            }
+
+            if (newContacts.length > 0) {
+                contacts = newContacts;
+                saveContacts();
+                applyFilters();
+                closeDataModal();
+                showToast(`✓ CSVから ${newContacts.length}件の連絡先を取り込みました`, 'success');
+                return true;
+            }
+            return false;
+        }
+
+        function parseCSVRow(rowText) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < rowText.length; i++) {
+                const char = rowText[i];
+                if (char === '"') {
+                    if (inQuotes && rowText[i + 1] === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        }
+
+        function initPWA() {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                const btnArea = document.getElementById('pwaInstallPromptBtnArea');
+                if (btnArea) btnArea.classList.remove('hidden');
+            });
+        }
+
+        function openPwaModal() {
+            document.getElementById('pwaModal').classList.remove('hidden');
+        }
+
+        function closePwaModal() {
+            document.getElementById('pwaModal').classList.add('hidden');
+        }
+
+        function triggerPwaInstall() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        showToast('アプリをインストールしました', 'success');
+                    }
+                    deferredPrompt = null;
+                    closePwaModal();
+                });
             }
         }
 
@@ -1157,11 +2217,30 @@
             if (!container) return;
 
             const toast = document.createElement('div');
-            toast.className = 'bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded-lg shadow-lg text-xs font-bold';
-            toast.textContent = message;
+            let bgClass = 'bg-slate-800 text-slate-100 border-slate-700';
+            let icon = '<i class="fa-solid fa-circle-info text-blue-400 mr-1.5"></i>';
+
+            if (type === 'success') {
+                bgClass = 'bg-emerald-950 text-emerald-100 border-emerald-700';
+                icon = '<i class="fa-solid fa-circle-check text-emerald-400 mr-1.5"></i>';
+            } else if (type === 'error') {
+                bgClass = 'bg-rose-950 text-rose-100 border-rose-700';
+                icon = '<i class="fa-solid fa-circle-exclamation text-rose-400 mr-1.5"></i>';
+            }
+
+            toast.className = `${bgClass} border px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl shadow-2xl text-xs font-bold flex items-center transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto max-w-full`;
+            toast.innerHTML = `${icon}<span class="truncate">${message}</span>`;
+
             container.appendChild(toast);
 
-            setTimeout(() => toast.remove(), 2500);
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
     </script>
 </body>
