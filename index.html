@@ -47,7 +47,7 @@
             font-family: 'Shippori Mincho', 'Noto Serif JP', serif;
         }
 
-        /* スクロールバー非表示（モバイル快適化） */
+        /* スクロールバー非表示 */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
@@ -211,7 +211,7 @@
                     </button>
                 </div>
 
-                <!-- 並び替え (アイコン+短縮表記) -->
+                <!-- 並び替え -->
                 <select id="sortSelect" onchange="applyFilters()" class="bg-slate-800/90 border border-slate-700/80 text-[11px] text-slate-200 rounded-lg px-1.5 py-1 focus:outline-none cursor-pointer">
                     <option value="custom">登録順</option>
                     <option value="kanaAsc">五十音 (ア→ン)</option>
@@ -414,17 +414,16 @@
         </div>
     </div>
 
-    <!-- 特大表示モーダル (サイズ維持・機能保持) -->
+    <!-- 特大表示モーダル (1行すっきりヘッダーに改修) -->
     <div id="zoomModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-2 overflow-y-auto">
         <div class="bg-slate-900 rounded-2xl max-w-2xl w-full p-3 sm:p-6 shadow-2xl border-2 border-amber-500/60 my-auto text-slate-100 relative max-h-[92dvh] overflow-y-auto">
-            <div class="flex justify-between items-start mb-2 pb-1.5 border-b border-slate-800">
-                <div>
-                    <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                        <i class="fa-solid fa-glasses mr-0.5"></i>手書き参照用 特大表示
-                    </span>
-                    <h3 class="text-sm sm:text-lg font-bold text-white">拡大参照画面</h3>
+            <!-- 1行化＆余計な縦崩れテキストを排除したスッキリヘッダー -->
+            <div class="flex justify-between items-center mb-2 pb-1.5 border-b border-slate-800 gap-1.5">
+                <div class="flex items-center space-x-1.5 min-w-0 shrink-0">
+                    <i class="fa-solid fa-glasses text-amber-400 text-sm sm:text-base"></i>
+                    <h3 class="text-xs sm:text-base font-bold text-white whitespace-nowrap">拡大参照</h3>
                 </div>
-                <div class="flex items-center space-x-1">
+                <div class="flex items-center space-x-1 shrink-0">
                     <div class="flex bg-slate-800 p-0.5 rounded-lg border border-slate-700 text-[10px]">
                         <button onclick="setZoomScale(1)" id="zoomScale100" class="px-1.5 py-0.5 rounded transition font-bold bg-amber-500 text-slate-950">100%</button>
                         <button onclick="setZoomScale(1.25)" id="zoomScale125" class="px-1.5 py-0.5 rounded transition font-bold text-slate-300">125%</button>
@@ -437,7 +436,7 @@
                 </div>
             </div>
 
-            <!-- スケール可変コンテナ (特大文字サイズを維持) -->
+            <!-- スケール可変コンテナ (特大表示エリア) -->
             <div id="zoomScaleContainer" class="transition-transform duration-200 origin-top-left space-y-2.5 sm:space-y-4">
                 <div class="bg-slate-950 p-2.5 sm:p-4 rounded-xl border border-slate-800">
                     <div id="zoomFurigana" class="text-amber-400/90 text-xs sm:text-sm font-bold tracking-widest">ヤマダ タロウ</div>
@@ -1369,7 +1368,6 @@
                                     </h3>
                                 </div>
 
-                                <!-- アクションボタン（マーク中心） -->
                                 <div class="flex items-center space-x-0.5 bg-slate-900/90 p-0.5 rounded-lg border border-slate-700 shrink-0">
                                     <button onclick="moveContact(${index}, -1)" ${isFirst ? 'disabled class="opacity-30"' : 'class="hover:text-white"'} title="上へ"><i class="fa-solid fa-chevron-up text-[10px]"></i></button>
                                     <button onclick="moveContact(${index}, 1)" ${isLast ? 'disabled class="opacity-30"' : 'class="hover:text-white"'} title="下へ"><i class="fa-solid fa-chevron-down text-[10px]"></i></button>
